@@ -1,0 +1,29 @@
+BANGBANG — BẢN TẢI VỀ (chơi offline trên máy ngài)
+====================================================
+Bản live đĩa ngày 27/11/2026 — index.html md5 0dbc92878f2765470a62f8d0974b8401, 30.818 dòng.
+Đã sửa trong bản này: cổng LOAD-FULL kiểm tra lại sheet triệu hồi (Golem/Mini/Sparky),
+đạn thường không còn vệt xanh khi sheet null, Golem/Mini giữ khung cuối khi sheet về chậm;
+kèm lọc lại Thiên Thần (batch 8) và batch 9 (index 40–44).
+Nội dung: index.html + assets/ (5.959 file, ~1,0 GB) + HUONG-DAN-MO.txt + MO-GAME.bat/.sh/.ps1.
+Không có audits/ hay file làm việc.
+
+CÁCH MỞ GAME (QUAN TRỌNG — ĐỌC TRƯỚC KHI MỞ)
+------------------------------------------------
+KHÔNG mở trực tiếp bằng cách double-click index.html: Chrome chặn fetch() từ file://
+nên game sẽ báo "Không tải được dữ liệu game (assets/data2.json)" và dừng lại.
+(Không chỉ data2.json: mọi sheet JSON của game cũng tải bằng fetch() nên đều hỏng
+khi mở kiểu file://. Đây là giới hạn của trình duyệt, không phải lỗi game.)
+
+- Windows: double-click MO-GAME.bat (tự mở trình duyệt tại http://localhost:8000/).
+  Cần Python (nếu có) hoặc PowerShell có sẵn của Windows 10/11.
+- Mac/Linux: chạy ./MO-GAME.sh (cần Python 3).
+- Cách thủ công (mọi máy): mở terminal/cmd tại thư mục này, chạy:
+    python -m http.server 8000
+  rồi mở trình duyệt: http://localhost:8000/
+- Để TẮT game: đóng cửa sổ server (Ctrl+C trong cửa sổ đó).
+
+LƯU Ý
+------
+- Bản tải về chơi offline hoàn toàn (không cần mạng sau khi tải xong).
+- Bản trên web (đĩa live) và bản tải về này là CÙNG 1 BẢN (cùng md5 index.html).
+- Nếu sau này có bản live mới, cần tải lại bản ZIP mới (tên file có md5 để đối chiếu).

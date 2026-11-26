@@ -1,0 +1,116 @@
+{
+ "cell_size": [
+  341,
+  343
+ ],
+ "frames": [
+  {
+   "page": 0,
+   "pivot": [
+    49.0,
+    171.5
+   ],
+   "rect": [
+    1,
+    1,
+    341,
+    343
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    59.0,
+    171.5
+   ],
+   "rect": [
+    343,
+    1,
+    341,
+    343
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    59.0,
+    171.5
+   ],
+   "rect": [
+    685,
+    1,
+    341,
+    343
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    52.0,
+    171.5
+   ],
+   "rect": [
+    1,
+    345,
+    341,
+    343
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    56.0,
+    171.5
+   ],
+   "rect": [
+    343,
+    345,
+    341,
+    343
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    62.0,
+    171.5
+   ],
+   "rect": [
+    685,
+    345,
+    341,
+    343
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "file": "2000018-0.webp",
+   "size": [
+    1027,
+    689
+   ]
+  }
+ ],
+ "runtime": {
+  "fps": 20.0,
+  "frame_dur_s": 0.05,
+  "total_s": 0.3,
+  "note": "chop nong v3 CAT TRUC TIEP o2 (Phong dan): 1 khung cat dung cho ca 6 khung, chi giam alpha 1.0/0.7/0.45/0.25/0.12/0.05 (scale 0.70, orb tai 110,171.5, sao dung pivot nong). Khong tach sao khoi orb, khong ve them. Rect/pivot/nhip GIU NGUYEN kv_muzzle_flash@6 (6x0.05s, KV_FLASH_SCALE 0.45)."
+ },
+ "timeline": {
+  "clips": [
+   {
+    "angle_degrees": 0,
+    "frames": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  ]
+ }
+}

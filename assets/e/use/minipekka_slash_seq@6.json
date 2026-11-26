@@ -1,0 +1,108 @@
+{
+ "cell_size": [
+  420,
+  375
+ ],
+ "frames": [
+  {
+   "page": 0,
+   "pivot": [
+    147.5,
+    195.4
+   ],
+   "rect": [
+    1,
+    1,
+    420,
+    375
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    218.5,
+    201.3
+   ],
+   "rect": [
+    422,
+    1,
+    420,
+    375
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    187.9,
+    202.8
+   ],
+   "rect": [
+    843,
+    1,
+    420,
+    375
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    209.4,
+    209.8
+   ],
+   "rect": [
+    1264,
+    1,
+    420,
+    375
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    216.4,
+    202.1
+   ],
+   "rect": [
+    1685,
+    1,
+    420,
+    375
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    251.9,
+    203.5
+   ],
+   "rect": [
+    2106,
+    1,
+    420,
+    375
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "file": "minipekka_slash_seq@6-0.webp",
+   "size": [
+    2527,
+    377
+   ]
+  }
+ ],
+ "runtime": {
+  "sequence": [
+   "1. Vung kiem tu luc (wind-up)",
+   "2. Bo chem toi (down-swing = HIT frame)",
+   "3. Bung no vet chem (explosion)",
+   "4. Du chan tia lua (sparks)",
+   "5. Thu kiem ve the (recover)",
+   "6. Chay doi tay-chan (run)"
+  ],
+  "source": "CUT 26/11: image 2 (38dc7178) 6 panels, title cut at y=48, direct cut, no redraw",
+  "pivot_note": "per-panel pivot = joint (dome method, dark mask; panel3 Jy = median of others, explosion hides helmet)",
+  "seq_dy_note": "MINI_SEQ_DY=-3.2 (165 - max feet-Jy 168.2)"
+ }
+}

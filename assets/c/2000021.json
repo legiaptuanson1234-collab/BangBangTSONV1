@@ -1,0 +1,200 @@
+{
+ "cell_size": [
+  256,
+  256
+ ],
+ "frames": [
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    1,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    258,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    515,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    772,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    1029,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    1286,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    1543,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    1800,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    2057,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    2314,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    2571,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128,
+    189
+   ],
+   "rect": [
+    2828,
+    1,
+    256,
+    256
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "file": "2000021-0.webp",
+   "size": [
+    3085,
+    258
+   ]
+  }
+ ],
+ "runtime": {
+  "fps": 12.5,
+  "frame_dur_s": 0.08,
+  "total_s": 0.96,
+  "note": "bien hinh di+ve (khung 8 Nam): f0-f5 thuong->Sparky, f6 giu Sparky, f7-f11 Sparky->thuong. Nong mo 0-0.4, cuon hien 0.25-1.0, man dien sin dinh giua che diem thay. 12 khung x 0.08s = 0.96s (DE XUAT). Chi thay Layer 2, Layer 1 khong dong."
+ },
+ "timeline": {
+  "clips": [
+   {
+    "angle_degrees": 0,
+    "frames": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  ]
+ }
+}

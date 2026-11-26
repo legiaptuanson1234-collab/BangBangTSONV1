@@ -1,0 +1,330 @@
+{
+ "cell_size": [
+  256,
+  256
+ ],
+ "frames": [
+  {
+   "page": 0,
+   "pivot": [
+    128.6,
+    71.1
+   ],
+   "rect": [
+    1,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.3,
+    72.0
+   ],
+   "rect": [
+    258,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    126.7,
+    65.5
+   ],
+   "rect": [
+    515,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    126.5,
+    59.7
+   ],
+   "rect": [
+    772,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    127.9,
+    59.7
+   ],
+   "rect": [
+    1029,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    129.4,
+    59.5
+   ],
+   "rect": [
+    1286,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    127.4,
+    63.0
+   ],
+   "rect": [
+    1543,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    126.8,
+    65.0
+   ],
+   "rect": [
+    1800,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.6,
+    56.7
+   ],
+   "rect": [
+    2057,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.8,
+    62.6
+   ],
+   "rect": [
+    2314,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    127.5,
+    62.2
+   ],
+   "rect": [
+    2571,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.1,
+    59.5
+   ],
+   "rect": [
+    2828,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    127.7,
+    58.0
+   ],
+   "rect": [
+    3085,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    130.4,
+    59.1
+   ],
+   "rect": [
+    3342,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    127.5,
+    60.3
+   ],
+   "rect": [
+    3599,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    127.7,
+    58.6
+   ],
+   "rect": [
+    3856,
+    1,
+    256,
+    256
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "file": "2000011-0.webp",
+   "size": [
+    4113,
+    258
+   ]
+  }
+ ],
+ "runtime": {
+  "layer": "FIX8 26/11: legs RE-CUT DIRECTLY from ngai's image image-62df35b2.png (same 02:24 source as FIX7); FIX7 left a ~1px near-white opaque fringe (mean RGB ~247, ramp min<=240->opaque) = white halo on dark bg. FIX8: bg = flood-fill from border through min>=248; only the 2px edge band gets AA alpha a=(248-min)/48 with white-decontamination fg=(RGB-(1-a)*255)/a; core art (incl. steel highlights min>230) untouched, alpha 1. Label digits cleared; diamond f15: gap part only removed as background, on-art part LEFT. Pivot = cyan disc centroid (joint).",
+  "direction": "round(normalized_angle/22.5)%16; residual angle rotates body container",
+  "source": "FIX6 26/11: 3D-render re-shade of FIX5 silhouette (same alpha/geometry, new shading only); reference image-2a9515dc.png + AI 3D design sheet reference only; PIL/numpy sprites, NO AI pixels cut in; see audits/.../work/fix6/FIX6-REPORT.md"
+ },
+ "timeline": {
+  "clips": [
+   {
+    "angle_degrees": 0.0,
+    "frames": [
+     0
+    ]
+   },
+   {
+    "angle_degrees": 22.5,
+    "frames": [
+     1
+    ]
+   },
+   {
+    "angle_degrees": 45.0,
+    "frames": [
+     2
+    ]
+   },
+   {
+    "angle_degrees": 67.5,
+    "frames": [
+     3
+    ]
+   },
+   {
+    "angle_degrees": 90.0,
+    "frames": [
+     4
+    ]
+   },
+   {
+    "angle_degrees": 112.5,
+    "frames": [
+     5
+    ]
+   },
+   {
+    "angle_degrees": 135.0,
+    "frames": [
+     6
+    ]
+   },
+   {
+    "angle_degrees": 157.5,
+    "frames": [
+     7
+    ]
+   },
+   {
+    "angle_degrees": 180.0,
+    "frames": [
+     8
+    ]
+   },
+   {
+    "angle_degrees": 202.5,
+    "frames": [
+     9
+    ]
+   },
+   {
+    "angle_degrees": 225.0,
+    "frames": [
+     10
+    ]
+   },
+   {
+    "angle_degrees": 247.5,
+    "frames": [
+     11
+    ]
+   },
+   {
+    "angle_degrees": 270.0,
+    "frames": [
+     12
+    ]
+   },
+   {
+    "angle_degrees": 292.5,
+    "frames": [
+     13
+    ]
+   },
+   {
+    "angle_degrees": 315.0,
+    "frames": [
+     14
+    ]
+   },
+   {
+    "angle_degrees": 337.5,
+    "frames": [
+     15
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,514 @@
+{
+ "cell_size": [
+  256,
+  256
+ ],
+ "frames": [
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    1,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    258,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    515,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    772,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    1029,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    1286,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    1543,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    1800,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    2057,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    2314,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    2571,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    2828,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    3085,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    3342,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    3599,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    3856,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    4113,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    4370,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    4627,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    4884,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    5141,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    5398,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    5655,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    5912,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    6169,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    6426,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    6683,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    6940,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    7197,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    7454,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    7711,
+    1,
+    256,
+    256
+   ]
+  },
+  {
+   "page": 0,
+   "pivot": [
+    128.0,
+    66.0
+   ],
+   "rect": [
+    7968,
+    1,
+    256,
+    256
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "file": "2000015-0.webp",
+   "size": [
+    8225,
+    258
+   ]
+  }
+ ],
+ "runtime": {
+  "layer": "FIX6 26/11: walk-phase legs sheet, 3D re-shade of FIX5: 8 dirs x 4 phases (P0/P2 contact, P1/P3 swing, knee bent, foot lifted); frame=dir8*4+phase; pivot (128,66); pants folds + steel-boot gradient",
+  "direction": "8 dirs x 4 walk phases; frame = dir8*4+phase; dir8 = round(normalized_angle/45)%8; phase advances every MINI_STEP_PX/2 px travelled (see FIX5 integration notes)",
+  "source": "FIX6 26/11: 3D-render re-shade of FIX5 silhouette (same alpha/geometry, new shading only); reference image-2a9515dc.png + AI 3D design sheet reference only; PIL/numpy sprites, NO AI pixels cut in; see audits/.../work/fix6/FIX6-REPORT.md"
+ },
+ "timeline": {
+  "clips": [
+   {
+    "angle_degrees": 0.0,
+    "frames": [
+     0,
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "angle_degrees": 45.0,
+    "frames": [
+     4,
+     5,
+     6,
+     7
+    ]
+   },
+   {
+    "angle_degrees": 90.0,
+    "frames": [
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "angle_degrees": 135.0,
+    "frames": [
+     12,
+     13,
+     14,
+     15
+    ]
+   },
+   {
+    "angle_degrees": 180.0,
+    "frames": [
+     16,
+     17,
+     18,
+     19
+    ]
+   },
+   {
+    "angle_degrees": 225.0,
+    "frames": [
+     20,
+     21,
+     22,
+     23
+    ]
+   },
+   {
+    "angle_degrees": 270.0,
+    "frames": [
+     24,
+     25,
+     26,
+     27
+    ]
+   },
+   {
+    "angle_degrees": 315.0,
+    "frames": [
+     28,
+     29,
+     30,
+     31
+    ]
+   }
+  ]
+ }
+}
