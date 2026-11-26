@@ -1,6 +1,18 @@
 # BangBang
 
+## ▶️ Chơi ngay trên web (không cần tải, không cần cài gì)
+
+**[Mở link chơi game](https://legiaptuanson1234-collab.github.io/BangBangTSONV1/)**
+
+Hoặc copy trực tiếp: `https://legiaptuanson1234-collab.github.io/BangBangTSONV1/`
+
+Mở bằng trình duyệt (Chrome / Edge / Firefox / Safari) trên máy nào cũng được —
+lần đầu tải ~1 GB dữ liệu, các lần sau được trình duyệt nhớ (cache) nên mở nhanh.
+
+---
+
 Game web chạy offline hoàn toàn (không cần mạng sau khi tải xong).
+Muốn bản tải về chơi nội bộ (không cần internet): xem mục "Chạy bản offline" bên dưới.
 
 ## Cấu trúc
 
@@ -8,7 +20,7 @@ Game web chạy offline hoàn toàn (không cần mạng sau khi tải xong).
 - `assets/` — ~5.959 file dữ liệu/ảnh của game (~1 GB)
 - `MO-GAME.bat` / `MO-GAME.sh` / `MO-GAME.ps1` — script mở game (chạy server local)
 
-## Cách chạy (quan trọng)
+## Chạy bản offline (không cần internet)
 
 **KHÔNG** mở trực tiếp bằng cách double-click `index.html`: trình duyệt chặn
 `fetch()` ở chế độ `file://` nên game sẽ báo "Không tải được dữ liệu game
@@ -16,7 +28,7 @@ Game web chạy offline hoàn toàn (không cần mạng sau khi tải xong).
 
 | Hệ điều hành | Cách mở |
 |---|---|
-| Windows | Double-click `MO-GAME.bat` (cần Python hoặc dùng PowerShell có sẵn) |
+| Windows | Double-click `MO-GAME.bat` (tự dùng Python/Python Launcher nếu có, nếu không thì PowerShell có sẵn) |
 | macOS / Linux | `./MO-GAME.sh` (cần Python 3) |
 | Mọi máy (cách thủ công) | Mở terminal trong thư mục này: `python -m http.server 8000` rồi truy cập `http://localhost:8000/` |
 
