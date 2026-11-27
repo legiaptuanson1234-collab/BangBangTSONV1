@@ -155,91 +155,314 @@ function addBtn(key,x,y,w,h,label,cb,disabled){
   if(b) stage.appendChild(b);
 }
 
-/* ========== HALL ========== */
+/* ========== HALL (SummerHallFrame M72 gốc — hall "Đấu trường") ========== */
+// Dữ liệu catalog M72 gốc (m810_modes / m89_pk_maps / m811_death) — map + tên + tiêu chuẩn y hệt client M72.
+var M72_PK_MAPS=[
+  {mapId:19,mode:'pk_robo',name:'Robo – Star Wars',objective:''},
+  {mapId:1,mode:'pk_maya',name:'Lời Tiên Tri Maya',objective:'Diệt đối thủ, hoàn thành nhiệm vụ Tù Trưởng'},
+  {mapId:4,mode:'pk_snow',name:'Băng Thiên Tuyết Địa',objective:''},
+  {mapId:17,mode:'pk_fastfood',name:'Quán Ăn Vui Vẻ',objective:'Diệt đối thủ, tận dụng trụ hồi phục'},
+  {mapId:18,mode:'pk_totem',name:'Vật Tổ',objective:'Diệt đối thủ, tranh đoạt Vật Tổ'},
+  {mapId:20,mode:'pk_cow',name:'Dắt Bò',objective:'Dẫn bò đối phương về chuồng đội mình'},
+  {mapId:21,mode:'pk_lightning',name:'Điện Chớp Sấm Rền',objective:'Diệt đối thủ, kiểm soát trụ năng lượng'},
+  {mapId:34,mode:'pk_polar',name:'Tiền Đồn Cực Địa',objective:''},
+  {mapId:35,mode:'pk_fortress',name:'Pháo Đài Không Gian',objective:'Diệt đối thủ, tận dụng cổng dịch chuyển'},
+  {mapId:36,mode:'pk_mine',name:'Khu Mỏ Phóng Xạ',objective:'Hộ tống xe mỏ về căn cứ'}
+];
+var M72_BASE_MAPS=[{mapId:12,name:'Tinh Khoáng'},{mapId:14,name:'Di Tích Maya'},{mapId:50,name:'Thị Trấn Ánh Dương'},{mapId:169,name:'Cực Địa'}];
+var M72_OCCUPY_MAPS=[{mapId:7,name:'Việt Dã'},{mapId:9,name:'Cổ Mộ'},{mapId:10,name:'Trung Tâm Vận Chuyển'},{mapId:37,name:'Quân Khu Tử Thần'},{mapId:170,name:'Vùng Cát Lún'}];
+var M72_ESCORT_MAPS=[{mapId:70,name:'Hộ Tống Xe Bom'}];
+var M72_DEATH_MAPS=[{mapId:30,name:'Mỏ Khoáng Sụp Đổ'},{mapId:40,name:'Thành Tận Thế'}];
+var M72_PRACTICE_MAPS=[{mapId:7,name:'Việt Dã luyện tập'}];
+var M72_SPECIAL=[
+  {mapId:9,name:'Ba Cờ Chiếm Điểm',kind:'m72flags',time:600,winScore:300,desc:'Chiếm 3 cờ M72: giữ vòng cờ để tích điểm · cờ giữa cần giữ lâu hơn, cho nhiều điểm hơn.'},
+  {mapId:36,name:'Dẫn Bò Sữa',kind:'m72cow',time:600,winPoints:25,desc:'Dẫn xe bò của mình tới chuồng địch: xe chỉ chạy khi có đồng đội đi kèm · chặn xe địch.'},
+  {mapId:70,name:'Đuổi Xe Bom',kind:'m72cart',time:900,winScore:1000,desc:'Hộ tống xe bom trên đường ray: càng nhiều người đi kèm càng nhanh · phá/đè xe địch.'},
+  {mapId:170,name:'Lốc Xoái',kind:'m72flags',time:600,winScore:300,desc:'Chiếm 3 cờ giữa bão lốc M72: lốc di chuyển theo đường cố định, hất tung + làm chậm ai trúng.'}
+];
+var BOT_AI_OPTS=[{v:'legacy',l:'Bot gốc'},{v:'elite_v1',l:'ProV3'}];
+var M72_ROOMS=[
+  {id:1021,name:'Săn Boss tối Thứ 7',type:2,mapId:19,pc:7,px:10,st:0},
+  {id:1104,name:'So tài Vật Tổ',type:2,mapId:18,pc:10,px:10,st:0},
+  {id:1213,name:'Tự do · Cổ Mộ',type:1,mapId:9,pc:3,px:10,st:0},
+  {id:1330,name:'Hội Quân · Mỏ Phóng Xạ',type:2,mapId:36,pc:9,px:10,st:2},
+  {id:1402,name:'Sân tập Việt Dã',type:1,mapId:7,pc:2,px:10,st:0},
+  {id:1511,name:'Tinh Khoáng · Team Rực',type:1,mapId:12,pc:6,px:10,st:0},
+  {id:1624,name:'Cực Địa · Winter',type:2,mapId:169,pc:10,px:10,st:0},
+  {id:1733,name:'Cát Lún · Thợ Săn',type:1,mapId:170,pc:4,px:10,st:2}
+];
+function m72MapGroup(id){
+  if(M72_PK_MAPS.some(function(x){return x.mapId===id;})) return 'PK';
+  if(M72_BASE_MAPS.some(function(x){return x.mapId===id;})) return 'Phá trụ';
+  if(M72_OCCUPY_MAPS.some(function(x){return x.mapId===id;})) return 'Chiếm cứ điểm';
+  if(M72_ESCORT_MAPS.some(function(x){return x.mapId===id;})) return 'Hộ tống';
+  if(M72_DEATH_MAPS.some(function(x){return x.mapId===id;})) return 'Sinh Tử';
+  if(M72_PRACTICE_MAPS.some(function(x){return x.mapId===id;})) return 'Luyện tập';
+  return null;
+}
+function synthM72Mode(mapId){
+  var pk=(M72_PK_MAPS||[]).find(function(x){return x.mapId===mapId;});
+  if(pk) return { key:'pk'+mapId, name:'So tài PK · '+pk.name, desc:'So tài 5v5 '+pk.name+' · '+(pk.objective||'Tiêu diệt đối thủ, kiếm điểm')+' · hạ 25 mạng trước là thắng.', mapId:mapId, time:600, winKills:25, kind:'tdm', group:'PK' };
+  var b=(M72_BASE_MAPS||[]).find(function(x){return x.mapId===mapId;});
+  if(b) return { key:'base'+mapId, name:'Phá trụ · '+b.name, desc:'Phá trụ căn cứ địch ở đầu kia bản đồ '+b.name+' · trụ vỡ là thắng ngay.', mapId:mapId, time:600, kind:'base', group:'Phá trụ' };
+  var o=(M72_OCCUPY_MAPS||[]).find(function(x){return x.mapId===mapId;});
+  if(o){
+    if(o.mapId===9)  return { key:'m72flags9',  name:'Ba Cờ Chiếm Điểm', desc:'Chiếm 3 cờ M72: giữ vòng cờ để tích điểm · cờ giữa cần giữ lâu hơn, cho nhiều điểm hơn.', mapId:9, time:600, winScore:300, kind:'m72flags', group:'Chiếm cứ điểm' };
+    return { key:'occp'+mapId, name:'Chiếm cứ điểm · '+o.name, desc:'Giữ vòng cứ điểm giữa map '+o.name+' để tích điểm · chạm 1000 điểm trước là thắng.', mapId:mapId, time:600, winScore:1000, kind:'point', group:'Chiếm cứ điểm' };
+  }
+  var e=(M72_ESCORT_MAPS||[]).find(function(x){return x.mapId===mapId;});
+  if(e) return { key:'m72cart70', name:'Đuổi Xe Bom', desc:'Hộ tống xe bom trên đường ray: càng nhiều người đi kèm càng nhanh · phá/đè xe địch.', mapId:70, time:900, winScore:1000, kind:'m72cart', group:'Hộ tống' };
+  var d=(M72_DEATH_MAPS||[]).find(function(x){return x.mapId===mapId;});
+  if(d) return { key:'elim'+mapId, name:'Sinh Tử · '+d.name, desc:'Không hồi sinh · đội còn người sống sót cuối cùng thắng hiệp, thắng 3 hiệp trước ('+d.name+').', mapId:mapId, time:300, kind:'elim', group:'Sinh Tử' };
+  var p=(M72_PRACTICE_MAPS||[]).find(function(x){return x.mapId===mapId;});
+  if(p) return { key:'practice'+mapId, name:'Luyện tập · '+p.name, desc:'Sân tập riêng: thử mọi chiêu của tank đang chọn · 5 tank Lv6 đứng yên, hồi sinh 5 giây.', mapId:mapId, time:0, kind:'practice', group:'Luyện tập' };
+  return null;
+}
+var modalShade=null;
+function closeModal(){ if(modalShade){ modalShade.remove(); modalShade=null; } }
+
 function buildHall(data){
   setWH(1018,618);
   addBg('room.background');
-  var t=img('title_hall_t',(1018-(art('title_hall_t')||[0,200,0])[1])/2,21); if(t) stage.appendChild(t);
+  var sh=img('flow.pvpReadyRoom1000x600_shadow',18,47); if(sh) stage.appendChild(sh);
+  var th=art('flow.title_hall_t'); if(th){ var ti=document.createElement('img'); ti.src='assets/'+th[0]; pos(ti,(1018-th[1])/2,21,th[1],th[2]); stage.appendChild(ti); }
   addBtn('public.close',979,15,24,24,null,function(){ show('menu'); });
-  
-  // --- Mode panel (left) ---
-  var mp=document.createElement('div'); mp.className='m8panel';
-  pos(mp,30,55,470,500); mp.style.overflowY='auto'; mp.style.scrollbarWidth='thin';
-  mp.appendChild(lbl('Chọn chế độ chơi',14,8,null,'m8mhead'));
-  var modes=(typeof MODES!=='undefined')?MODES:[];
-  var selMode=(typeof lobby!=='undefined')?lobby.mode:modes[0];
-  modes.forEach(function(m){
-    var card=document.createElement('div');
-    card.style.cssText='position:relative;margin:6px 14px;padding:10px 12px;background:#141e2b;border:1px solid #303f54;border-radius:8px;cursor:pointer;min-height:52px;';
-    card.appendChild(el('span','',m.name)).style.cssText='font:bold 14px Tahoma;color:#fff9bd;display:block;';
-    if(m.desc){ var d=el('span','',m.desc); d.style.cssText='font:11px Tahoma;color:#9fb0c4;margin-top:3px;line-height:1.3;display:block;'; card.appendChild(d); }
-    if(m.mapId){ var _mm=mapName(m.mapId); var mi=el('span','','Map: #'+m.mapId+(_mm?(' · '+_mm.w+'x'+_mm.h):'')); mi.style.cssText='font:10px Tahoma;color:#5f7586;margin-top:2px;display:block;'; card.appendChild(mi); }
-    if(m.time){ var ti=el('span','','⏱ '+(m.time/60|0)+' phút'+(m.winKills?(' · '+(m.winKills)+' mạng'):'')+(m.winScore?(' · '+(m.winScore)+' điểm'):'')); ti.style.cssText='font:10px Tahoma;color:#5f7586;margin-top:2px;display:block;'; card.appendChild(ti); }
-    if(selMode===m){ card.style.borderColor='#599b7f'; card.style.background='#19332c'; }
-    card.addEventListener('click',function(){
-      if(typeof lobby!=='undefined') lobby.mode=m;
-      mp.querySelectorAll('div').forEach(function(c){ if(c!==card && c.style && c.style.position==='relative'){ c.style.borderColor='#303f54'; c.style.background='#141e2b'; } });
-      card.style.borderColor='#599b7f'; card.style.background='#19332c';
-      showModeDetail(m);
-    });
-    mp.appendChild(card);
-  });
-  stage.appendChild(mp);
-  
-  // --- Bot settings panel (right top) ---
-  var bp=document.createElement('div'); bp.className='m8panel'; pos(bp,530,55,440,230);
-  bp.appendChild(lbl('Thiết lập Bot',14,8,null,'m8mhead'));
-  var alliesS=sel(150,40,80,makeRange(0,5),(lobby&&lobby.botAllies!=null)?lobby.botAllies:4,'Số bot cùng đội');
-  var enemiesS=sel(150,70,80,makeRange(0,6),(lobby&&lobby.botEnemies!=null)?lobby.botEnemies:5,'Số bot đối thủ');
-  var levelS=sel(150,100,80,makeRange(1,6),(lobby&&lobby.botLevel!=null)?lobby.botLevel:1,'Cấp bot');
-  bp.appendChild(rowLbl('Bot cùng đội',38)).appendChild(alliesS);
-  bp.appendChild(rowLbl('Bot đối thủ',68)).appendChild(enemiesS);
-  bp.appendChild(rowLbl('Cấp bot',98)).appendChild(levelS);
-  stage.appendChild(bp);
-  
-  // Save button
-  var saveB=txtBtn('Lưu thiết lập',530,295,130,32,function(){
-    if(typeof lobby!=='undefined'){
-      lobby.botAllies=parseInt(alliesS.value,10);
-      lobby.botEnemies=parseInt(enemiesS.value,10);
-      lobby.botLevel=parseInt(levelS.value,10);
-    }
-    saveB.textContent='✓ Đã lưu';
-    setTimeout(function(){ saveB.textContent='Lưu thiết lập'; },1200);
-  });
-  stage.appendChild(saveB);
-  
-  // Create room button
-  var createB=txtBtn('Tạo phòng',680,295,130,32,function(){
-    if(typeof lobby!=='undefined'){
-      lobby.botAllies=parseInt(alliesS.value,10);
-      lobby.botEnemies=parseInt(enemiesS.value,10);
-      lobby.botLevel=parseInt(levelS.value,10);
-    }
-    show('room');
-  },true);
-  stage.appendChild(createB);
-  
-  // --- Mode detail panel (right bottom) ---
-  var detail=document.createElement('div'); detail.id='m8modedetail'; detail.className='m8panel';
-  pos(detail,530,340,440,210); detail.style.overflowY='auto'; detail.style.scrollbarWidth='thin';
-  if(selMode) showModeDetail(selMode);
-  stage.appendChild(detail);
-  
-  function showModeDetail(m){
-    if(!m) return;
-    detail.innerHTML='';
-    detail.style.paddingTop='34px';
-    detail.appendChild(lbl('Chi tiết: '+(m.name||''),14,8,null,'m8mhead'));
-    if(m.desc){ var p=el('p','',m.desc); p.style.cssText='margin:8px 14px;font:12px Tahoma;color:#cde9ff;line-height:1.5;white-space:pre-line;'; detail.appendChild(p); }
-    if(m.time){ var t2=el('p','','Thời gian: '+(m.time/60|0)+' phút'); t2.style.cssText='margin:4px 14px;font:11px Tahoma;color:#9fb0c4;'; detail.appendChild(t2); }
-    if(m.mapId){ var _mn=mapName(m.mapId); var m2=el('p','','Bản đồ: #'+m.mapId+(_mn?(' · '+_mn.w+'x'+_mn.h):'')); m2.style.cssText='margin:4px 14px;font:11px Tahoma;color:#9fb0c4;'; detail.appendChild(m2); }
-    if(m.kind){ var k=el('p','','Loại: '+m.kind); k.style.cssText='margin:4px 14px;font:11px Tahoma;color:#5f7586;'; detail.appendChild(k); }
-  }
-}
 
-function makeRange(a,b){ var r=[]; for(var i=a;i<=b;i++) r.push({v:i,l:String(i)}); return r; }
+  // 4 tab (gốc: Sự kiện / So tài PK / Xếp hạng / Giải Guild — chỉ So tài PK hoạt động trên máy chủ tĩnh)
+  var tabs=[
+    {icon:'flow.sort_title_happygame_t',text:'Sự kiện',en:false},
+    {icon:'flow.sort_title_arena_selected_t',text:'So tài PK',en:true,sel:true},
+    {icon:'flow.icon_ladder_unselect_t',text:'Xếp hạng',en:false},
+    {icon:'flow.sort_title_teamcompetition_t',text:'Giải Guild',en:false}
+  ];
+  tabs.forEach(function(t,ix){
+    var bg=art(t.sel?'flow.sort_selected':'flow.sort_bk');
+    var b=document.createElement('button'); b.className='m8artbtn';
+    pos(b,22+[0,113,226,339][ix],51,109,39);
+    if(bg){ var bi=document.createElement('img'); bi.src='assets/'+bg[0]; bi.style.cssText='width:109px;height:39px;display:block;'; b.appendChild(bi); }
+    if(!t.en) b.classList.add('off');
+    var ic=art(t.icon);
+    if(ic){ var ii=document.createElement('img'); ii.src='assets/'+ic[0]; ii.style.cssText='position:absolute;left:'+Math.max(0,(109-ic[1])/2)+'px;top:'+Math.max(0,(39-ic[2])/2)+'px;width:'+ic[1]+'px;height:'+ic[2]+'px;'; b.appendChild(ii); }
+    b.title=t.en?'So tài PK':'chưa mở trên máy chủ hiện tại';
+    stage.appendChild(b);
+  });
+
+  // Header danh sách phòng (6 tiêu đề cột)
+  ['team','name','model','map','num','status'].forEach(function(nm,ix){
+    var a=art('flow.roomlist_caption_'+nm+'_t'); if(!a) return;
+    var im=document.createElement('img'); im.src='assets/'+a[0]; pos(im,[40,230,359,459,559,658][ix],92,a[1],a[2]); im.style.objectFit='contain'; stage.appendChild(im);
+  });
+
+  // Danh sách 8 phòng
+  var listWrap=el('div',''); pos(listWrap,21,109,783,292); stage.appendChild(listWrap);
+  for(var r=0;r<8;r++){
+    var bk=art('flow.list_bk');
+    if(bk){ var bi2=document.createElement('img'); bi2.src='assets/'+bk[0]; pos(bi2,0,r===7?251:36*r,781,38); listWrap.appendChild(bi2); }
+  }
+  var rooms=M72_ROOMS.slice();
+  var hallList=el('div',''); pos(hallList,5,5,778,288); hallList.style.overflowY='auto'; hallList.style.scrollbarWidth='thin'; listWrap.appendChild(hallList);
+  function renderRooms(){
+    hallList.replaceChildren();
+    rooms.slice(0,8).forEach(function(room){
+      var waiting=(room.st!==2), full=room.pc>=room.px, row=document.createElement('article'); row.style.cssText='position:relative;height:36px;';
+      var bgA=art(waiting?'flow.roomlisttitle_wait_bk':'flow.roomlisttitle_pairing_bk');
+      if(bgA){ var rb=document.createElement('img'); rb.src='assets/'+bgA[0]; pos(rb,0,4,771,28); row.appendChild(rb); }
+      var c1=el('span','',String(room.id)); pos(c1,3,3,110,22); c1.style.cssText+=';font:12px Tahoma;color:#cde9ff;overflow:hidden;white-space:nowrap;'; row.appendChild(c1);
+      var c2=el('span','',room.name||''); pos(c2,144,3,171,22); c2.style.cssText+=';font:bold 13px Tahoma;color:#fff9bd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'; row.appendChild(c2);
+      var c3=el('span','',room.type===1?'Tự do':'So tài'); pos(c3,323,3,60,22); c3.style.cssText+=';font:11px Tahoma;color:#9fc4dc;'; row.appendChild(c3);
+      var pk=m72MapGroup(room.mapId); var c4=el('span','',pk?(pk+' · '+room.mapId):('Map '+room.mapId)); pos(c4,391,3,120,22); c4.style.cssText+=';font:11px Tahoma;color:#cde9ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'; row.appendChild(c4);
+      var c5=el('span','',room.pc+'/'+room.px); pos(c5,523,3,60,22); c5.style.cssText+=';font:bold 12px Tahoma;color:#fff;'; row.appendChild(c5);
+      var stKey=full?'flow.list_status_waitting_disable_t':(room.st===2?'flow.list_status_pairing_t':'flow.list_status_waitting_t');
+      var stA=art(stKey); if(stA){ var si=document.createElement('img'); si.src='assets/'+stA[0]; pos(si,385.5+259-stA[1]/2,2,stA[1],stA[2]); si.style.objectFit='contain'; row.appendChild(si); }
+      var joinable=waiting&&!full;
+      var jb=el('button','m8artbtn'); pos(jb,719,2,49,24);
+      var jA=art('flow.roomlist_btn_join_t'); if(jA){ var ji=document.createElement('img'); ji.src='assets/'+jA[0]; ji.style.cssText='width:49px;height:24px;display:block;'; jb.appendChild(ji); }
+      jb.title='Gia nhập đội '+room.id;
+      if(!joinable) jb.classList.add('off');
+      jb.addEventListener('click',function(){
+        if(!joinable) return;
+        var m=synthM72Mode(room.mapId); if(m) lobby.mode=m;
+        show('room');
+      });
+      row.appendChild(jb);
+      hallList.appendChild(row);
+    });
+  }
+  renderRooms();
+
+  var pager=img('flow.pager_bk',527,394); if(pager) stage.appendChild(pager);
+  stage.appendChild(artBtn('flow.btn_s2_prev',605,399,null,null,null,function(){},null));
+  stage.appendChild(artBtn('flow.btn_s2_next',648,399,null,null,null,function(){},null));
+  var refresh=artBtn('flow.button_2_s_blue',714,398,86,25,'Làm mới',function(){
+    M72_ROOMS.forEach(function(rm){ rm.pc=Math.min(rm.px,1+Math.floor(Math.random()*10)); rm.st=Math.random()<0.3?2:0; });
+    rooms=M72_ROOMS.slice(); renderRooms();
+  },{disabled:false}); if(refresh) stage.appendChild(refresh);
+
+  // Quick play (gốc: nút đỏ "Gia nhập nhanh")
+  var qbk=img('flow.quickplay_bk_4',534,429); if(qbk) stage.appendChild(qbk);
+  var qj=artBtn('flow.button_red_m',546,442,198,48,null,function(){
+    var first=rooms.find(function(rm){return rm.st!==2&&rm.pc<rm.px;});
+    if(!first){ alert('Không có phòng trống để gia nhập nhanh.'); return; }
+    var m=synthM72Mode(first.mapId); if(m) lobby.mode=m;
+    show('room');
+  },{disabled:false}); if(qj) stage.appendChild(qj);
+  var qw=art('flow.word_quickplay_onlyfont_t'); if(qw){ var qwi=document.createElement('img'); qwi.src='assets/'+qw[0]; pos(qwi,546+69-12,442+12,qw[1],qw[2]); qwi.style.objectFit='contain'; qwi.style.pointerEvents='none'; stage.appendChild(qwi); }
+  var ico=img('flow.ico_pvp',581,451,32,31); if(ico) ico.style.pointerEvents='none';
+
+  // "Tạo đội PK" + "Tìm đội" (gốc: btn_create_team_t / btn_find_team_t)
+  stage.appendChild(artBtn('flow.btn_create_team_t',527,499,null,null,'Tạo đội PK',function(){ openCreateRoomModal(); },null));
+  stage.appendChild(artBtn('flow.btn_find_team_t',650,499,null,null,'Tìm đội',function(){ openFindRoomModal(); },null));
+
+  // Chat (gốc: createChat(ui,false))
+  buildChatPanel(false);
+  // Sidebar online (gốc: roomplayerlist)
+  buildSidebar();
+}
+function buildChatPanel(isRoom){
+  var root=el('section',''); pos(root,10,407,464,202);
+  var bk=art('flow.chatBk'); if(bk){ var b=document.createElement('img'); b.src='assets/'+bk[0]; pos(b,0,-6,bk[1],bk[2]); root.appendChild(b); }
+  ['Tổng','Room','Team','Guild','Chat riêng'].forEach(function(txt,ix){
+    var a=art(ix===0?'flow.chat_channel_select':'flow.chat_channel_item'); if(!a) return;
+    var btn=document.createElement('button'); btn.className='m8artbtn off'; pos(btn,31+ix*71,1,69,25);
+    var i=document.createElement('img'); i.src='assets/'+a[0]; i.style.cssText='width:69px;height:25px;display:block;'; btn.appendChild(i);
+    var lb=el('span','',txt); pos(lb,0,1,69,24); lb.style.cssText+=';text-align:center;font:10px Tahoma;color:#e7f6ff;text-shadow:0 1px 1px #000;pointer-events:none;'; btn.appendChild(lb);
+    btn.title='Kênh chat chưa được máy chủ hiện tại hỗ trợ'; root.appendChild(btn);
+  });
+  [['flow.chat_clear',53,'Xóa chat'],['flow.chat_up',77,'Cuộn lên'],['flow.chat_down',101,'Cuộn xuống'],['flow.chat_downend',125,'Cuối chat']].forEach(function(r){
+    var a=art(r[0]); if(!a) return;
+    var b=document.createElement('button'); b.className='m8artbtn off'; pos(b,10,r[1],20,20);
+    var i=document.createElement('img'); i.src='assets/'+a[0]; i.style.cssText='width:20px;height:20px;display:block;'; b.appendChild(i);
+    b.title=r[2]; root.appendChild(b);
+  });
+  var inpRow=el('div',''); pos(inpRow,0,159,239,40);
+  function i2(a){ var n=document.createElement('img'); n.src='assets/'+a[0]; n.style.cssText='position:absolute;top:-3px;width:'+a[1]+'px;height:'+a[2]+'px;'; return n; }
+  var hh=art('flow.chatbghead'); if(hh){ var n1=i2(hh); n1.style.left='6px'; inpRow.appendChild(n1); }
+  var mm=art('flow.chatbgmid'); if(mm){ var n2=i2(mm); n2.style.left='116px'; inpRow.appendChild(n2); }
+  var tt=art('flow.chatbgtail'); if(tt){ var n3=i2(tt); n3.style.left='214px'; inpRow.appendChild(n3); }
+  var chLb=el('span','',isRoom?'Room':'Thế giới'); pos(chLb,31,10,70,19); chLb.style.cssText+=';font:13px Tahoma;color:#e7f6ff;text-shadow:0 1px 1px #000;'; inpRow.appendChild(chLb);
+  var unav=el('span','','Chat chưa mở'); pos(unav,122,10,96,19); unav.style.cssText+=';font:12px Tahoma;color:#9fc4dc;white-space:nowrap;'; inpRow.appendChild(unav);
+  root.appendChild(inpRow);
+  stage.appendChild(root);
+}
+function buildSidebar(){
+  var root=el('section',''); pos(root,813,45,194,521);
+  var bk=art('flow.roomplayerlist_bk'); if(bk){ var b=document.createElement('img'); b.src='assets/'+bk[0]; pos(b,0,0,bk[1],bk[2]); root.appendChild(b); }
+  for(var i=0;i<7;i++){ var it=art('flow.roomplayerlist_item'); if(it){ var ii=document.createElement('img'); ii.src='assets/'+it[0]; pos(ii,9,40+66*i,it[1],it[2]); root.appendChild(ii); } }
+  [['team','Guild',15],['friend','Bạn',71],['hall','Online',127]].forEach(function(r){
+    var key=r[2]===127?'flow.roomplayerlist_label_selected':'flow.roomplayerlist_label_bk';
+    var a=art(key); if(!a) return;
+    var btn=document.createElement('button'); btn.className='m8artbtn'+(r[2]!==127?' off':''); pos(btn,r[2],6,53,25);
+    var im=document.createElement('img'); im.src='assets/'+a[0]; im.style.cssText='width:53px;height:25px;display:block;'; btn.appendChild(im);
+    if(r[2]!==127){ var icA=art('flow.roomplayerlist_label_'+r[0]+'_t'); if(icA){ var ic=document.createElement('img'); ic.src='assets/'+icA[0]; ic.style.cssText='position:absolute;left:'+Math.max(0,(53-icA[1])/2)+'px;top:'+Math.max(0,(25-icA[2])/2)+'px;width:'+icA[1]+'px;height:'+icA[2]+'px;'; btn.appendChild(ic); } }
+    else { var lb=el('span','','Online'); pos(lb,0,1,53,23); lb.style.cssText+=';text-align:center;font:bold 10px Tahoma;color:#fff;text-shadow:0 1px 2px #000;pointer-events:none;'; btn.appendChild(lb); }
+    btn.title=r[0]==='hall'?'Người chơi online trong server':'chưa có danh sách từ máy chủ';
+    root.appendChild(btn);
+  });
+  var self=el('div',''); pos(self,5,40,184,64);
+  var av=document.createElement('img'); av.src='assets/thumb/'+lobby.tankId+'.png'; av.style.cssText='position:absolute;left:8px;top:4px;width:56px;height:56px;object-fit:contain;'; self.appendChild(av);
+  var sv=el('span','','Ngài'); pos(sv,72,8,100,18); sv.style.cssText+=';font:bold 12px Tahoma;color:#fff9bd;overflow:hidden;white-space:nowrap;'; self.appendChild(sv);
+  var sl=el('span','','Cấp '+((lobby&&lobby.level)||1)); pos(sl,72,30,100,16); sl.style.cssText+=';font:10px Tahoma;color:#9fc4dc;'; self.appendChild(sl);
+  root.appendChild(self);
+  var names=(typeof DB!=='undefined'&&DB.tanks)?DB.tanks:['','An','Bình','Chương','Đạt','Em'];
+  for(var k=0;k<6;k++){
+    var row2=el('div',''); pos(row2,5,106+66*k,184,64);
+    var nm=(DB.tanks&&DB.tanks[k])?DB.tanks[k].name:names[k%names.length];
+    var lv=1+(k%5);
+    var nmEl=el('span','',nm||('Người chơi '+(k+1))); pos(nmEl,8,4,120,18); nmEl.style.cssText+=';font:bold 12px Tahoma;color:#e7f6ff;overflow:hidden;white-space:nowrap;text-shadow:0 1px 2px #000;'; row2.appendChild(nmEl);
+    var lvImg2=art('chrome.tankLevel'+Math.min(6,lv)); if(lvImg2){ var lvN=document.createElement('img'); lvN.src='assets/'+lvImg2[0]; pos(lvN,8,26,lvImg2[1],lvImg2[2]); row2.appendChild(lvN); }
+    root.appendChild(row2);
+  }
+  stage.appendChild(root);
+}
+function makeRange(a,b){ var r=[]; for(var i=a;i<=b;i++) r.push({v:String(i),l:String(i)}); return r; }
 function rowLbl(text,y){ var s=el('span','',text); s.style.cssText='position:absolute;left:14px;top:'+(y)+'px;font:bold 12px Tahoma;color:#cde9ff;width:130px;'; return s; }
+
+// (form modal "Tạo đội PK" — dạng xếp dọc, label trái / select phải, y hệt modal 472x538 gốc)
+function openCreateRoomModal(){
+  if(modalShade) return;
+  modalShade=el('div','m8shade'); stage.appendChild(modalShade);
+  var panel=el('div','m8panel m8modal'); pos(panel,273,40,472,538); panel.style.zIndex='30';
+  modalShade.appendChild(panel);
+  var ct=art('wizard.assets.hall.title_createroom_t');
+  if(ct){ var ci=document.createElement('img'); ci.src='assets/'+ct[0]; pos(ci,(472-ct[1])/2,19,ct[1],ct[2]); ci.style.objectFit='contain'; panel.appendChild(ci); }
+  var closeB=artBtn('public.close',418,15,24,24,null,closeModal,null); if(closeB) panel.appendChild(closeB);
+
+  var form=el('div',''); pos(form,40,64,392,404); panel.appendChild(form);
+  function rowLabel(t,yy){ var s=el('span','',t); s.style.cssText='position:absolute;left:0;top:'+yy+'px;font:bold 12px Tahoma;color:#cde9ff;width:392px;display:block;'; form.appendChild(s); }
+
+  // Chế độ và bản đồ — nhóm "group · name" y hệt dropdown gốc
+  var modeOpts=[];
+  M72_PK_MAPS.forEach(function(m){ modeOpts.push({v:'pk'+m.mapId,l:'So tài PK · '+m.name}); });
+  M72_BASE_MAPS.forEach(function(m){ modeOpts.push({v:'base'+m.mapId,l:'Phá trụ · '+m.name}); });
+  M72_OCCUPY_MAPS.forEach(function(m){ modeOpts.push({v:'occp'+m.mapId,l:'Chiếm cứ điểm · '+m.name}); });
+  M72_ESCORT_MAPS.forEach(function(m){ modeOpts.push({v:'m72cart'+m.mapId,l:'Hộ tống · '+m.name}); });
+  M72_DEATH_MAPS.forEach(function(m){ modeOpts.push({v:'elim'+m.mapId,l:'Sinh Tử · '+m.name}); });
+  M72_PRACTICE_MAPS.forEach(function(m){ modeOpts.push({v:'practice'+m.mapId,l:'Luyện tập · '+m.name}); });
+  M72_SPECIAL.forEach(function(m){ modeOpts.push({v:'m72sp'+m.mapId,l:'M72 đặc biệt · '+m.name}); });
+  rowLabel('Chế độ và bản đồ',0);
+  var modeSel=sel(0,20,392,modeOpts,'pk19','Chế độ và bản đồ'); form.appendChild(modeSel);
+
+  rowLabel('Số bot cùng đội',64);  var alliesSel=sel(0,84,392,makeRange(0,4),String((lobby&&lobby.botAllies!=null)?lobby.botAllies:4),'Số bot cùng đội'); form.appendChild(alliesSel);
+  rowLabel('Số bot đối thủ',118); var enemiesSel=sel(0,138,392,makeRange(0,5),String((lobby&&lobby.botEnemies!=null)?lobby.botEnemies:5),'Số bot đối thủ'); form.appendChild(enemiesSel);
+  rowLabel('Cấp tank của bot',172); var levelSel=sel(0,192,392,makeRange(1,6),String((lobby&&lobby.botLevel!=null)?lobby.botLevel:1),'Cấp tank của bot'); form.appendChild(levelSel);
+  rowLabel('Loại bot cùng đội',226); var aiSel=sel(0,246,196,BOT_AI_OPTS,'legacy','Loại bot cùng đội'); form.appendChild(aiSel);
+  rowLabel('Loại bot đối thủ',280); var aiESel=sel(0,300,196,BOT_AI_OPTS,'legacy','Loại bot đối thủ'); form.appendChild(aiESel);
+
+  var note=el('span','', (modeSel.value==='practice'+M72_PRACTICE_MAPS[0].mapId)?'Luyện tập: 5 tank Lv6 đứng yên, hồi sinh sau 5 giây. Không giới hạn giờ.':'Chọn bot riêng cho mỗi phe. Để 0 bot cả hai bên nếu chơi toàn người.');
+  note.style.cssText='position:absolute;left:0;top:336px;width:392px;font:11px Tahoma;color:#9fc4dc;line-height:1.45;'; form.appendChild(note);
+
+  function syncNote(){
+    var training=(modeSel.value==='practice'+M72_PRACTICE_MAPS[0].mapId);
+    if(training){ alliesSel.value='0'; enemiesSel.value='5'; levelSel.value='6';
+      [alliesSel,enemiesSel,levelSel,aiSel,aiESel].forEach(function(s){s.disabled=true;});
+      note.textContent='Luyện tập: 5 tank Lv6 đứng yên, hồi sinh sau 5 giây. Không giới hạn giờ.';
+    } else {
+      [alliesSel,enemiesSel,levelSel,aiSel,aiESel].forEach(function(s){s.disabled=false;});
+      note.textContent='Chọn bot riêng cho mỗi phe. Để 0 bot cả hai bên nếu chơi toàn người.';
+    }
+  }
+  modeSel.addEventListener('change',syncNote);
+
+  var confirmB=artBtn('flow.button_window_green',332,474,120,35,null,function(){
+    var mkey=modeSel.value;
+    var sp=M72_SPECIAL.find(function(x){return 'm72sp'+x.mapId===mkey;});
+    var m;
+    if(sp) m={ key:sp.kind+sp.mapId, name:sp.name, desc:sp.desc, mapId:sp.mapId, time:sp.time, kind:sp.kind, winScore:sp.winScore, winPoints:sp.winPoints, group:'M72' };
+    else m=synthM72Mode(parseInt(mkey.slice(2),10));
+    if(!m){ alert('Chế độ không khả dụng.'); return; }
+    lobby.mode=m;
+    lobby.botAllies=parseInt(alliesSel.value,10)||0;
+    lobby.botEnemies=parseInt(enemiesSel.value,10)||0;
+    lobby.botLevel=parseInt(levelSel.value,10)||1;
+    lobby.botAI=(aiSel.value==='elite_v1'?'ProV3':'Bot gốc');
+    closeModal();
+    show('room');
+  },{disabled:false});
+  if(confirmB) panel.appendChild(confirmB);
+  var w=art('flow.title_confirm_green_t'); if(w){ var wi=document.createElement('img'); wi.src='assets/'+w[0]; pos(wi,332+12,474+7,w[1],w[2]); wi.style.objectFit='contain'; wi.style.pointerEvents='none'; panel.appendChild(wi); }
+}
+function openFindRoomModal(){
+  if(modalShade) return;
+  modalShade=el('div','m8shade'); stage.appendChild(modalShade);
+  var panel=el('div','m8panel m8modal'); pos(panel,330,180,358,258); panel.style.zIndex='30'; modalShade.appendChild(panel);
+  var closeB2=artBtn('public.close',319,15,24,24,null,closeModal,null); if(closeB2) panel.appendChild(closeB2);
+  var t2=art('wizard.assets.hall.title_createroom_t'); if(t2){ var ti2=document.createElement('img'); ti2.src='assets/'+t2[0]; pos(ti2,(358-t2[1])/2,19,t2[1],t2[2]); ti2.style.objectFit='contain'; panel.appendChild(ti2); }
+  var lb2=el('span','','Nhập mã phòng'); pos(lb2,74,55,210,23); lb2.style.cssText+=';font:bold 13px Tahoma;color:#cde9ff;'; panel.appendChild(lb2);
+  var inp=document.createElement('input'); inp.className='m8inp'; pos(inp,74,82,210,35); inp.maxLength=6; inp.inputMode='numeric'; inp.placeholder='Mã phòng 6 chữ số'; panel.appendChild(inp);
+  var st=el('span','','Vào chỗ trống hoặc thay một bot. Mỗi phe tối đa 5 người.'); pos(st,34,125,290,60); st.style.cssText+=';font:11px Tahoma;color:#9fc4dc;line-height:1.4;'; panel.appendChild(st);
+  var ok=artBtn('flow.button_window_green',119,206,120,35,null,function(){
+    var code=(inp.value||'').trim();
+    if(!/^[0-9]{6}$/.test(code)){ st.textContent='Nhập mã phòng gồm 6 chữ số.'; return; }
+    var room=rooms.find(function(rm){return String(rm.id)===code.slice(0,4);});
+    if(!room){ st.textContent='Không tìm thấy phòng '+code+' trên máy chủ hiện tại.'; return; }
+    if(room.st===2||room.pc>=room.px){ st.textContent='Phòng '+room.id+' đang '+((room.st===2)?'gắp đôi':'đủ người')+' — không gia nhập được.'; return; }
+    var m=synthM72Mode(room.mapId); if(m) lobby.mode=m;
+    st.textContent='Đã vào phòng '+room.id+' ('+(room.pc+1)+'/'+room.px+' người).';
+    setTimeout(closeModal,600); show('room');
+  },{disabled:false}); panel.appendChild(ok);
+  var w3=art('flow.title_confirm_green_t'); if(w3){ var wi3=document.createElement('img'); wi3.src='assets/'+w3[0]; pos(wi3,119+12,206+7,w3[1],w3[2]); wi3.style.objectFit='contain'; wi3.style.pointerEvents='none'; panel.appendChild(wi3); }
+  try{ inp.focus(); }catch(e){}
+}
 
 /* ========== ROOM ========== */
 function buildRoom(data){

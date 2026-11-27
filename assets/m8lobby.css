@@ -107,3 +107,10 @@
 .m8medal .mm3{ font:11px Tahoma; color:#c2e5f8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .m8reward{ font:700 13px Tahoma; color:#fff6b6; text-align:center; text-shadow:0 1px 2px #000; }
 @media (prefers-reduced-motion:reduce){ #m8root .m8btn,#m8root .m8artbtn{ filter:none; } }
+
+/* ===== HALL M72 (SummerHallFrame + modal Tạo đội PK) ===== */
+.m8shade{ position:absolute; left:0; top:0; width:100%; height:100%; background:#00101f99; z-index:20; }
+.m8modal{ overflow:hidden; }
+.m8modal .m8sel{ position:absolute; left:0; background:#04283f; border:1px solid #4f9ec9; border-radius:4px; color:#e9fbff; font:13px Tahoma,Arial,sans-serif; padding:6px 8px; width:100%; height:34px; }
+.m8modal .m8sel:focus{ outline:2px solid #ffe37a; outline-offset:1px; }
+.m8modal .m8inp{ position:absolute; background:#04283f; border:1px solid #4f9ec9; border-radius:4px; color:#e9fbff; font:13px Tahoma; padding:6px 8px; }
