@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/m8lobby.css" />
 <style>
   :root{
     --bg:#0b141f; --bg2:#0e1a28; --panel:#142433; --panel2:#182b3f; --line:#2b435c; --line2:#3a5a7a;
@@ -710,7 +711,7 @@ const MODES = [
 ];
 
 // ---------- Trạng thái sảnh ----------
-const lobby = { tankId:'10000001', level:1, mode:MODES[0], posFilter:0, search:'' };
+const lobby = { tankId:'10000001', level:1, mode:MODES[0], posFilter:0, search:'', botAllies:4, botEnemies:5, botLevel:1 };
 let preview = { body:null, turret:null, t:0, aim:-Math.PI/2, mx:0, my:0 };
 
 async function boot(){
@@ -5091,8 +5092,9 @@ const DD_BULLET_SPEED = 560, DD_BULLET_RANGE = 336, DD_BULLET_RADIUS = 10; // Đ
 const DD_DODGE_PCT = 0.25, DD_DODGE_CD = 0.25, DD_DODGE_HEAL = 0.05, DD_DODGE_REFUND_E = 0.4, DD_DODGE_REFUND_SPACE = 0.4, DD_DODGE_REFUND_R = 0.3; // Giác Quan Radar 391141 — 25% né đạn bay địch (Effect 391132), CD nội bộ 250ms (buff 391102 coolTime), hồi 5% HP đã mất (Effect 391144), hoàn 5% thời gian hồi tích trữ: E/SPACE 400ms, R 300ms (RAR _refund)
 const DD_LEDGER_DUR = 1, DD_LEDGER_DMG_MUL = 0.75, DD_LEDGER_HEAL_MUL = 1.25, DD_COST_PCT = 0.15; // Vỏ Bảo Vệ 391113 — 1s (buff persist 1000): ST nhận ×0.75 hoãn tổng kết, trị liệu nhận ×1.25, tốn 15% HP hiện tại mỗi lần tung E/SPACE/R (RAR _spend)
 // LỌC LẠI 26/11 — ĐÃ GỠ hệ tích trữ E Songoku (2 lượt / hồi 9s / cách 6,7s — các hằng + field tích trữ đã xóa hết): code RAR songoku_actions.py cooldowns slot 1 = 6000 phẳng, KHÔNG có charges; SkillTemplate iCoolTime 6000 + data2 cd 6.0 đồng thuận. Số iindex [skill_shunyi, 9000, 6700, 0, 2] không thắng được code RAR — cùng field đó ghi Q = 9000 trong khi Q tick gốc là 1s (đã bác ở 2 probe trước). E về CD thường 6s qua startCd.
-function makeEnt(tankId, team, isPlayer, name){
-  const t = TANKS[tankId], st = t.levels[lobby.level-1];
+function makeEnt(tankId, team, isPlayer, name, lv){
+  const t = TANKS[tankId], _lv = (lv!=null?lv:lobby.level);
+  const st = t.levels[Math.max(0,Math.min(t.levels.length-1,_lv-1))];
   const physMain = st.atk >= st.egAtk;
   return {
     uid: ENT_SEQ++, tankId, data:t, team, isPlayer:!!isPlayer, name: name||t.name,
@@ -23710,12 +23712,15 @@ async function startBattle(){
   const spawns = mj && mj.spawns? mj.spawns : { '1':[[180,876],[180,972],[276,924],[180,492],[180,396]], '2':[[1620,492],[1620,396],[1524,444],[1620,876],[1620,972]] };
   const airPts = mj && mj.air? mj.air : [[mapW/2, mapH/2]];
 
-  // Chọn đội hình: người chơi + 4 bot đồng đội; địch theo chế độ
+  // Chọn đội hình: người chơi + bot đồng đội (M72 room settings) + bot địch
+  const _botA = (lobby.botAllies!=null)?lobby.botAllies:4;
+  const _botE = (lobby.botEnemies!=null)?lobby.botEnemies:5;
+  const _botL = (lobby.botLevel!=null)?lobby.botLevel:lobby.level;
   const pool = DB.tanks.map(t=>t.id).filter(id=> id!==lobby.tankId);
   const shuffled = pool.sort(()=> Math.random()-.5);
-  let allyIds = shuffled.slice(0,4), enemyIds = shuffled.slice(4,9);
+  let allyIds = shuffled.slice(0, _botA), enemyIds = shuffled.slice(_botA, _botA+_botE);
   if(mode.kind==='practice'){ allyIds=[]; enemyIds=[shuffled[0]]; }
-  if(mode.kind==='boss'){ enemyIds=[shuffled[0]]; }
+  if(mode.kind==='boss'){ allyIds=shuffled.slice(0, Math.min(4,_botA)); enemyIds=[shuffled[Math.min(4,_botA)||1]]; } // boss: 4 bot bạn + 1 boss (giữ nguyên hành vi gốc)
   const names = BOTNAMES.slice().sort(()=> Math.random()-.5);
 
   B = {
@@ -23727,11 +23732,11 @@ async function startBattle(){
     silverP: 10000, firstBloodDone:false, camX:0, camY:0, zoom:1,
     wave:0, roundWins:{ blue:0, red:0 }, bases:[], boss:null, m72:{}, m72Flags:[], m72Cows:[], m72Barns:[], m72Carts:[], m72Tornadoes:[], shake:0, pendingAim:null, kvRipples:[], // pendingAim: lần ngắm đặt vùng kiểu LoL đang chờ (null = không ngắm); kvRipples: vòng sóng thả thẻ KV (r=120, 0,9s) // M72: m72Flags/m72Cows/m72Barns/m72Carts/m72Tornadoes = vật thể chế độ M72 (chiếm cờ / dẫn bò / xe bom / lốc xoáy), m72 = cờ trạng thái dùng chung
   };
-  const player = makeEnt(lobby.tankId, 1, true, 'Ngài');
+  const player = makeEnt(lobby.tankId, 1, true, 'Ngài', lobby.level);
   const _gateGen = B.gen; // HQ LOAD-FULL 25/11: the he cong vao — job cong chi duoc ghi vao B cua tran nay
   B.player = player; B.ents.push(player);
-  allyIds.forEach((id,i)=>{ const e=makeEnt(id,1,false,names[i]); e.ai={}; B.ents.push(e); });
-  enemyIds.forEach((id,i)=>{ const e=makeEnt(id,2,false,names[4+i]); e.ai={}; B.ents.push(e); });
+  allyIds.forEach((id,i)=>{ const e=makeEnt(id,1,false,names[i],_botL); e.ai={}; B.ents.push(e); });
+  enemyIds.forEach((id,i)=>{ const e=makeEnt(id,2,false,names[_botA+i]||names[4+i],_botL); e.ai={}; B.ents.push(e); });
 
   // Nạp hình cho mọi tank trong trận + sheet hiệu ứng của các chiêu
   const artJobs = B.ents.map(async e=>{ e.art = await loadTankArt(e.data, 60000); }); // HQ LOAD-FULL: art cong vao timeout 60s/lan (xem _kv6LoadFull)
@@ -27427,6 +27432,7 @@ function quitToLobby(){
   $('#battle').style.display='none';
   $('#endov').style.display='none';
   hideRespawn();
+  if(window.M8Lobby&&M8Lobby.used){ M8Lobby.backToMenu(); return; }
   $('#lobby').style.display='flex';
   AudioSys.loop('assets/s/m/gameroom.mp3', .30);
 }
@@ -30987,6 +30993,53 @@ function m72BotGoal(e){
 }
 
 boot();
+</script>
+<script src="assets/m8assets.js"></script>
+<script src="assets/m8lobby.js"></script>
+<script>
+/* ================= M72 LOBBY HOOK (11/2026) =================
+   Giao diện sảnh chờ M72 gốc (menu → hall → room → selection → loading → trận → result).
+   Chạy tĩnh: art M72 (assets/m8ui+ext+rez), data tank từ DB + MODES.
+   Nút "VÀO TRẬN" cũ (playbtn) giữ làm fallback; M72 flow dùng M8Lobby.showResult sau trận. */
+(function(){
+  if(!window.M8Lobby) return;
+  // Boot: vào menu M72 khi load xong
+  var iv=setInterval(function(){
+    if(typeof DB!=='undefined' && DB && DB.tanks && DB.tanks.length){
+      clearInterval(iv);
+      // Ẩn lobby cũ, hiện M72 menu
+      setTimeout(function(){
+        try{
+          var oldLobby=document.getElementById('lobby');
+          if(oldLobby) oldLobby.style.display='none';
+          M8Lobby.showMenu();
+        }catch(e){ console.warn('[M8Lobby] boot',e); }
+      },300);
+    }
+  },200);
+
+  // Hook endBattle: show M72 result screen
+  if(typeof endBattle==='function'){
+    var _eb=endBattle;
+    endBattle=function(winTeam,why){
+      _eb(winTeam,why);
+      // M72 result overlay (sau khi endov hiện, thêm nút M72)
+      setTimeout(function(){
+        if(typeof B!=='undefined' && B){
+          M8Lobby.showResult({win:B.result,sub:why});
+        }
+      },1100);
+    };
+  }
+
+  // Khi M72 loading kết thúc gọi startBattle, engine show #battle —
+  // hide M72 root khi battle canvas active
+  var _sb=startBattle;
+  startBattle=function(){
+    if(M8Lobby.used && M8Lobby.current==='loading') M8Lobby.hideOnBattleStart();
+    return _sb();
+  };
+})();
 </script>
 </body>
 </html>

@@ -62,6 +62,9 @@ Muốn bản tải về chơi nội bộ (không cần internet): xem mục "Ch�
 ## Ghi chú
 
 - Phiên bản trong repo này được cập nhật ngày 27/11/2026 (md5 index.html:
-  `6e51d678826aad651a37c8f3250eb979`).
+  `7fdd46590b4b9105505668ba1ee6e696`).
 - Thêm 4 chế độ M72 (Ba Cờ Chiếm Điểm / Dẫn Bò Sữa / Đuổi Xe Bom / Lốc Xoái)
   port từ bộ máy chủ BangBang M72 — giữ nguyên tank + chỉ số game này.
+- Giao diện sảnh chờ M72 (menu → hall chọn chế độ/bot → sảnh 5v5 → pick tank → loading → kết quả trận)
+  dùng art Flash gốc M72 (assets/m8ui, m8ext, rez — PNG JPEXS export) + m8lobby.js/m8lobby.css.
+  Chạy tĩnh, không cần server; các trường hợp M8A không có sẽ tự fallback giao diện sảnh cũ.

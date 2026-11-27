@@ -1,0 +1,109 @@
+/* ================= M72 LOBBY UI — port giao diện sảnh chờ M72 gốc (11/2026) =================
+   Chrome native Flash 1000x600/1018x618 (theo m8.css + m84_flow.css + m86_postmatch.css của client M72),
+   art PNG JPEXS từ www/html5/assets_m8* + www/rez (đã copy vào assets/m8ui, assets/m8ext, assets/rez).
+   Chạy TĨNH: không server — dữ liệu tank/chế độ lấy từ engine (MODES, DB, lobby, BOTNAMES).
+   Luồng: menu (Sảnh) → hall (chọn chế độ + bot) → room (sảnh chờ 5v5) → sel (pick tank) → loading → trận → result. */
+#m8root{ position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:#030c1d; overflow:hidden; font:14px Tahoma,Arial,sans-serif; color:#fff; }
+#m8root.on{ display:flex; }
+#m8root .m8v{ position:relative; overflow:hidden; box-shadow:0 0 80px #12598f33; flex:none; }
+#m8root .m8s{ position:absolute; left:0; top:0; transform-origin:0 0; overflow:hidden; background:#063052; isolation:isolate; }
+#m8root .m8s *{ box-sizing:border-box; }
+#m8root img{ max-width:none; pointer-events:none; user-select:none; }
+#m8root .m8i{ position:absolute; }
+#m8root button{ cursor:pointer; font:inherit; }
+/* nút chữ M72 (m8-button gốc) */
+.m8btn{ position:absolute; appearance:none; min-height:30px; padding:6px 14px; border:1px solid #88c8ee; border-radius:6px; background:linear-gradient(#2388bb,#105385); color:#fff; font:bold 13px Tahoma,Arial,sans-serif; text-shadow:0 1px 2px #003450; box-shadow:inset 0 1px #c3e8ff55,0 2px 3px #00132477; }
+.m8btn:hover:not(:disabled){ filter:brightness(1.12); }
+.m8btn:active:not(:disabled){ filter:brightness(.95); }
+.m8btn:disabled{ opacity:.48; cursor:default; }
+.m8btn.primary{ background:linear-gradient(#ffa650,#e75c18); border-color:#ffda93; font-size:15px; }
+/* nút art M72 (m8-image-button gốc) */
+.m8artbtn{ position:absolute; padding:0; border:0; background:none; box-shadow:none; display:block; }
+.m8artbtn img{ display:block; }
+.m8artbtn:hover:not(:disabled){ filter:brightness(1.12); }
+.m8artbtn:active:not(:disabled){ filter:brightness(.95); }
+.m8artbtn:disabled{ cursor:default; }
+.m8artbtn:disabled img{ filter:grayscale(.45) brightness(.75); }
+.m8artbtn.off img{ filter:grayscale(.55) brightness(.8); }
+/* input + select (m8-shell input gốc) */
+.m8sel,.m8inp{ position:absolute; background:#063451; border:1px solid #6eb7da; border-radius:4px; color:#fff; font:13px Arial; padding:5px 8px; min-width:0; }
+.m8sel:focus,.m8inp:focus{ outline:2px solid #ffe37a; outline-offset:1px; }
+/* nhãn (m84-flow-label gốc) */
+.m8lbl{ position:absolute; display:block; font:bold 13px Tahoma,Arial,sans-serif; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 1px #254b62; pointer-events:none; }
+.m8lbl.off{ color:#bcd3e4; text-shadow:none; font-weight:400; }
+/* ===== MENU (m8 shell lobby frame gốc) ===== */
+.m8port{ position:absolute; overflow:visible; }
+.m8port img{ width:100%; height:100%; object-fit:contain; }
+.m8mname{ font:bold 21px Tahoma; text-shadow:0 2px 3px #041d38; color:#ffffd9; }
+.m8lvtext{ font:700 11px Tahoma; color:#ffdf20; text-shadow:1px 1px 1px #7b4c00; }
+/* ===== HALL (SummerHallFrame + bảng tạo phòng m81337) ===== */
+.m8panel{ position:absolute; background:linear-gradient(145deg,#0f6b99ed,#063d65f7); border:1px solid #8ac7e0; border-radius:9px; box-shadow:inset 0 0 0 2px #09284055,0 3px 10px #001b3b88; }
+.m8frow{ display:flex; align-items:center; gap:10px; margin:10px 14px; font:12px Tahoma; color:#cde9ff; position:relative; }
+.m8frow .fl{ width:130px; font-weight:700; }
+.m8frow .m8sel{ position:static; width:170px; }
+.m8frow .hint{ font-size:11px; color:#9fc4dc; }
+.m8mhead{ font:700 16px Tahoma; color:#fff3bd; letter-spacing:1px; }
+.m8mlbl{ font:700 12px Tahoma; color:#fff9bd; text-shadow:0 1px 2px #03355a; }
+.m8modecap{ font:11px Tahoma; color:#d8f5ff; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* ===== ROOM (RoomFrame pvp5v5 gốc) ===== */
+.m8roomcard{ position:absolute; overflow:visible; }
+.m8pname{ font:700 13px Tahoma; }
+.m8tankname{ font:11px Tahoma; color:#d8f5ff; }
+.m8statustag{ font:700 11px Tahoma; color:#baffaf; text-shadow:0 1px 2px #033524; }
+.m8rt{ font:700 15px Tahoma; color:#fff9bd; }
+.m8chat{ position:absolute; overflow:hidden; }
+.m8chat .m8cinp{ position:absolute; }
+.m8chat .m8cchan{ position:absolute; font:13px Tahoma; color:#e7f6ff; text-align:center; text-shadow:0 1px 1px #000; }
+.m8chat .m8cunav{ position:absolute; font:12px Tahoma; color:#e7f6ff; white-space:nowrap; }
+/* ===== SELECTION (SelectTankFrameNew gốc) ===== */
+.m8clock{ position:absolute; font:700 39px Tahoma; color:#fff6b6; text-align:center; text-shadow:0 3px 1px #135572; pointer-events:none; }
+.m8teamlab{ font:700 16px Tahoma; color:#fff; text-align:center; text-shadow:0 1px 2px #000; }
+.m8grid{ position:absolute; overflow:auto; scrollbar-width:thin; }
+.m8selwin{ position:relative; width:510px; }
+.m8tile{ position:absolute; width:96px; height:96px; padding:0; border:0; background-color:transparent; background-size:96px 96px; overflow:hidden; cursor:pointer; }
+.m8tile>img{ position:absolute; left:4px; top:4px; width:88px; height:88px; object-fit:contain; }
+.m8tile .tnm{ position:absolute; left:4px; right:4px; bottom:3px; font:11px Tahoma; color:#fff; text-shadow:0 1px 3px #00395d; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+.m8tile.sel{ outline:3px solid #ffedaa; outline-offset:-3px; }
+.m8tile .tlv{ position:absolute; left:0; right:0; top:2px; text-align:center; pointer-events:none; }
+.m8tile .tlv img{ display:block; margin:0 auto; }
+.m8playercard{ position:absolute; overflow:hidden; }
+.m8playercard .ph{ position:absolute; left:0; top:0; width:98px; height:98px; object-fit:contain; }
+.m8pn2{ position:absolute; font:700 13px Tahoma; color:#fff; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m8pt2{ position:absolute; font:11px Tahoma; color:#c2e5f8; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m8plk{ position:absolute; left:0; right:0; bottom:4px; text-align:center; font:700 11px Tahoma; color:#ffef94; }
+.m8selcat .cl{ position:absolute; font:700 10px Tahoma; color:#fff; text-shadow:0 1px 2px #000; text-align:center; pointer-events:none; }
+/* panel thông tin tank */
+.m8info{ position:absolute; color:#cde9ff; font:12px Tahoma; }
+.m8info .bg{ position:absolute; left:0; top:0; width:100%; }
+.m8info .iname{ position:absolute; left:10px; top:8px; right:10px; font:700 14px Tahoma; color:#fff9bd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m8info .srow{ position:absolute; display:flex; justify-content:space-between; left:12px; right:12px; height:20px; line-height:20px; }
+.m8info .srow .sl{ color:#9fc4dc; font-size:11px; }
+.m8info .srow .sv{ font-weight:700; color:#fff; }
+/* ===== LOADING (BattleLoadingView gốc) ===== */
+.m8lcard{ position:absolute; overflow:visible; }
+.m8lcard .lhead{ position:absolute; width:160px; height:160px; object-fit:contain; }
+.m8lname{ position:absolute; left:78px; width:145px; font:700 13px Tahoma; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 2px #074c74; }
+.m8ltrack{ position:absolute; }
+.m8lfill{ position:absolute; overflow:hidden; }
+.m8lfill img{ position:absolute; left:0; top:0; }
+.m8lpct{ position:absolute; font:700 12px Tahoma; color:#fff; text-align:center; text-shadow:0 1px 2px #000; }
+.m8lmap{ position:absolute; border:3px solid #0077d3; }
+.m8lmapname{ font:700 15px Tahoma; color:#fff0a5; text-align:center; letter-spacing:1px; }
+.m8status{ position:absolute; font:13px Tahoma; color:#e9fbff; text-align:center; white-space:pre-line; }
+.m8status.err{ color:#ffb7b7; }
+/* ===== RESULT (BattleResultMV gốc) ===== */
+.m8title{ position:absolute; display:block; }
+.m8rescore{ font:700 16px Tahoma; color:#fff; text-align:center; text-shadow:0 1px 3px #000; }
+.m8kda{ position:absolute; }
+.m8kda table{ border-collapse:collapse; table-layout:fixed; }
+.m8kda th{ font:700 11px Tahoma; color:#9fd4f5; text-transform:uppercase; padding:5px 6px; border-bottom:1px solid #88c8ee33; text-align:left; }
+.m8kda td{ font:13px Tahoma; color:#dcf7fc; padding:5px 6px; border-bottom:1px solid #88c8ee22; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m8kda td.n{text-align:right; font-weight:700; }
+.m8kda tr.me td{ color:#fff600; }
+.m8kda .tth{ font:700 13px Tahoma; color:#d9faff; padding:2px 6px 6px; text-shadow:0 1px 2px #125a7a; }
+.m8medal{ position:absolute; text-align:center; width:150px; }
+.m8medal .mm1{ font:700 11px Tahoma; color:#ffd34d; letter-spacing:1px; text-shadow:0 1px 2px #000; }
+.m8medal .mm2{ font:700 14px Tahoma; color:#fff; text-shadow:0 1px 2px #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m8medal .mm3{ font:11px Tahoma; color:#c2e5f8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m8reward{ font:700 13px Tahoma; color:#fff6b6; text-align:center; text-shadow:0 1px 2px #000; }
+@media (prefers-reduced-motion:reduce){ #m8root .m8btn,#m8root .m8artbtn{ filter:none; } }
