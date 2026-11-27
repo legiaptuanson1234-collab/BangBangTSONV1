@@ -20,6 +20,24 @@ Muốn bản tải về chơi nội bộ (không cần internet): xem mục "Ch�
 - `assets/` — ~5.959 file dữ liệu/ảnh của game (~1 GB)
 - `MO-GAME.bat` / `MO-GAME.sh` / `MO-GAME.ps1` — script mở game (chạy server local)
 
+## 12 chế độ chơi
+
+- **Nhiệt Huyết 5v5** — đấu 25 mạng (map 4)
+- **Chiếm Cứ Điểm** — giữ vòng giữa map tích điểm (map 19)
+- **Căn Cứ Đối Công** — phá căn cứ địch (map 12)
+- **Tử Vong** — không hồi sinh, thắng 3 hiệp (map 20)
+- **Hỏa Cầu** — đạn nổ diện rộng +20% tốc (map 30)
+- **Phó Bản** — dọn 3 đợt địch (map 34)
+- **Boss Thế Giới** — 5 người hạ 1 boss (map 35)
+- **Thử Tank** — sân tập (map 4)
+- **Ba Cờ Chiếm Điểm** *(M72)* — chiếm 3 cờ, giữ để tích điểm, giữ cả 3 cờ ×2 điểm (map 9)
+- **Dẫn Bò Sữa** *(M72)* — dắt xe bò của mình tới chuồng địch, chặn xe địch (map 36)
+- **Đuổi Xe Bom** *(M72)* — hộ tống xe bom đi đúng đường ray; người đi kèm càng nhiều xe chạy càng nhanh; xe về đích trước thắng (map 70)
+- **Lốc Xoái** *(M72)* — chiếm 3 cờ giữa 4 lốc xoáy; lốc di chuyển theo đường cố định, hất tung + làm chậm người đi trúng; lốc xuất hiện lần lượt (map 170)
+
+> 4 chế độ *(M72)* được port từ bộ máy chủ BangBang M72: **giữ nguyên bản đồ, tank và chỉ số của game này**, chỉ thêm luật chơi + vật thể (cờ / bò sữa + chuồng / xe bom / lốc xoáy) với toạ độ khớp 1:1 với bản đồ gốc.
+
+
 ## Chạy bản offline (không cần internet)
 
 **KHÔNG** mở trực tiếp bằng cách double-click `index.html`: trình duyệt chặn
@@ -44,4 +62,6 @@ Muốn bản tải về chơi nội bộ (không cần internet): xem mục "Ch�
 ## Ghi chú
 
 - Phiên bản trong repo này được cập nhật ngày 27/11/2026 (md5 index.html:
-  `0dbc92878f2765470a62f8d0974b8401`).
+  `6e51d678826aad651a37c8f3250eb979`).
+- Thêm 4 chế độ M72 (Ba Cờ Chiếm Điểm / Dẫn Bò Sữa / Đuổi Xe Bom / Lốc Xoái)
+  port từ bộ máy chủ BangBang M72 — giữ nguyên tank + chỉ số game này.
