@@ -5011,7 +5011,8 @@ function _watchDpr(){ // dpr đổi (kéo cửa sổ sang màn khác, đổi t�
   try{ const m = matchMedia('(resolution: '+(window.devicePixelRatio||1)+'dppx)'); m.addEventListener('change', ()=>{ resizeCv(); _watchDpr(); }); }catch(_){ /* trình duyệt cũ: bỏ qua, còn poll zoom dưới */ }
 }
 function resizeCv(){
-  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  // PERF-1127: cap DPR 2 -> 1.5 — màn HiDPI/4K trước đây bitmap canvas to gấp 4, GPU chèn => tụt fps theo đợt; 1.5 nét đủ, nhẹ hơn ~44%
+  const dpr = Math.min(window.devicePixelRatio||1, 1.5);
   const box = cvBox();
   CVW = box.w; CVH = box.h;
   cv.width = Math.max(1, Math.floor(CVW*dpr)); cv.height = Math.max(1, Math.floor(CVH*dpr));
@@ -27459,11 +27460,16 @@ function renderBattle(){
   const shx = B.shake>0? rand(-1,1)*7*B.shake : 0, shy = B.shake>0? rand(-1,1)*7*B.shake : 0;
   ctx.translate(-B.camX+shx, -B.camY+shy);
   // Nền map (ảnh thật của map gốc)
-  if(B.bg) ctx.drawImage(B.bg, 0, 0, B.mapW, B.mapH);
+  if(B.bg){
+    // PERF-1127: vẽ SUB-RECT chỉ vùng nhìn thấy (9-arg drawImage) — map to (2400x2400) trước đây upload cả tấm bitmap mỗi khung; GPU nay chỉ xử lý khung view -> mượt hơn hẳn
+    { const _vx=B.camX,_vy=B.camY,_sx=Math.max(0,_vx),_sy=Math.max(0,_vy),_sw=Math.min(_vx+viewW,B.mapW)-_sx,_sh=Math.min(_vy+viewH,B.mapH)-_sy;
+      if(_sw>0&&_sh>0) ctx.drawImage(B.bg,_sx,_sy,_sw,_sh,_sx,_sy,_sw,_sh); }
+  }
   else { ctx.fillStyle='#20303c'; ctx.fillRect(0,0,B.mapW,B.mapH); }
   // Vùng hiệu ứng dưới đất — Hồ Lô SPACE ('hlwood') vẽ TRƯỚC TIÊN, lớp dưới cùng, để không che ụ súng (ngài báo 17:15: SPACE che cả ụ súng)
   try{ // TG_VANISH2 V2: 1 zone lỗi không được nuốt cả khung vẽ (xem _tvLog)
-  for(const z of [...B.zones].sort((a,b)=>((a.kind==='hlwood')?0:1)-((b.kind==='hlwood')?0:1))){ // sort ổn định: chỉ hlwood lên đầu, thứ tự các zone khác giữ nguyên
+  if(B.zones.length>1) B.zones.sort((a,b)=>((a.kind==='hlwood')?0:1)-((b.kind==='hlwood')?0:1)); // PERF-1127: sort in-place stable thay vì copy mảng mới mỗi khung (GC pause) — nghĩa giữ nguyên: hlwood lên đầu, thứ tự khác không đổi
+  for(const z of B.zones){ // PERF-1127: iter in-place (kết quả vẽ giống hệt bản cũ)
     if(z.kind==='capture'){
       ctx.beginPath(); ctx.arc(z.x,z.y,z.r,0,Math.PI*2);
       ctx.fillStyle='rgba(255,211,77,.10)'; ctx.fill();
@@ -30514,7 +30520,8 @@ function buildSkillButtons(p){
 let teamPanelSig = '';
 function updateTeamPanels(){
   if(!B) return;
-  const sig = B.ents.map(e=>e.uid+':'+e.tankId+':'+e.team+':'+e.name).join('|');
+  // PERF-1127: sig ents tính 1 lần (team/name/uid cố định sau startBattle); Phó Bản spawn thêm ents thì dài array đổi -> tự tính lại
+  const sig = (B._entsSigLen===B.ents.length && B._entsSig!=null) ? B._entsSig : (B._entsSigLen=B.ents.length, B._entsSig=B.ents.map(e=>e.uid+':'+e.tankId+':'+e.team+':'+e.name).join('|'));
   const blue = $('#teamblue'), red = $('#teamred');
   if(!blue || !red) return;
   if(sig !== teamPanelSig){
@@ -30535,7 +30542,8 @@ function updateTeamPanels(){
   }
   for(const e of B.ents){
     if(!e._thpfill) continue;
-    e._thpfill.style.width = (clamp(e.hp/e.maxHp,0,1)*100)+'%';
+    const _tw=(clamp(e.hp/e.maxHp,0,1)*100)+'%'; // PERF-1127: chỉ set style khi máu đổi
+    if(e._twl!==_tw){ e._twl=_tw; e._thpfill.style.width=_tw; }
     e._trow.classList.toggle('dead', !e.alive);
   }
 }
@@ -30602,6 +30610,16 @@ function updateFxBar(p, now){
 }
 function updateHud(){
   if(!B) return;
+  // PERF-1127: cache ref DOM HUD 1 lần/trận — trước đây mỗi khung gọi querySelectorAll('.skbtn') + querySelector x3/nút => layout thrashing (giật từng đợt khi máu/MP/skill đổi)
+  if(!B._hud){
+    B._hud={
+      sb:$('#scoreblue'), sr:$('#scorered'), clock:$('#clock'),
+      hpf:document.querySelector('#hpbar .fill'), hps:document.querySelector('#hpbar .shfill'), hpb:document.querySelector('#hpbar .btx'),
+      mfill:document.querySelector('#mpbar .fill'), mbtx:document.querySelector('#mpbar .btx'),
+      sk:[...document.querySelectorAll('.skbtn')].map(b=>({b, ov:b.querySelector('.cdov'), num:b.querySelector('.cdnum'), ch:b.querySelector('.chcnt')}))
+    };
+  }
+  const _hud=B._hud;
   const p=B.player, now=B.time;
   if(p.tankId==='10000055' && (p.kkCopyName||null)!==p._kkLastCopyName){ p._kkLastCopyName=p.kkCopyName||null; buildSkillButtons(p); } // Kakashi: tên E sao chép đổi -> dựng lại tên nút E (buildSkillButtons chỉ chạy lúc vào trận nên tên sao chép không tự hiện; chỉ chạy khi tên đổi, tank khác no-op)
   const point = B.mode.kind==='point';
@@ -30609,32 +30627,35 @@ function updateHud(){
   if(B.mode.kind==='m72flags'){ _m72bl=B.m72.score.blue; _m72rd=B.m72.score.red; }
   else if(B.mode.kind==='m72cow'){ _m72bl=B.m72.pts.blue; _m72rd=B.m72.pts.red; }
   else if(B.mode.kind==='m72cart'){ _m72bl=B.score.blue; _m72rd=B.score.red; } // xe bom: giữ tỉ mạng, xe về đích endBattle
-  $('#scoreblue').textContent = point? B.pointScore.blue : _m72bl;
-  $('#scorered').textContent = point? B.pointScore.red : _m72rd;
+  const _sbv=point? B.pointScore.blue : _m72bl, _srv=point? B.pointScore.red : _m72rd; // PERF-1127: chỉ ghi DOM khi giá trị đổi (textContent mỗi khung = layout recalc)
+  if(String(_hud.sb.textContent)!==String(_sbv)) _hud.sb.textContent=_sbv;
+  if(String(_hud.sr.textContent)!==String(_srv)) _hud.sr.textContent=_srv;
   const tsec = B.mode.time>0? Math.max(0, Math.ceil(B.left)) : Math.floor(B.time);
-  $('#clock').textContent = Math.floor(tsec/60)+':'+String(tsec%60).padStart(2,'0');
+  const _clk=Math.floor(tsec/60)+':'+String(tsec%60).padStart(2,'0');
+  if(_hud.clock.textContent!==_clk) _hud.clock.textContent=_clk;
   // Sinh lực
   const hpFrac = clamp(p.hp/p.maxHp, 0, 1), shFrac = clamp(p.shield/p.maxHp, 0, 1);
-  const hb=$('#hpbar');
-  hb.querySelector('.fill').style.width = (hpFrac*100)+'%';
-  const shEl = hb.querySelector('.shfill');
-  shEl.style.left = (hpFrac*100)+'%'; // vạch khiên DÍNH SÁT sau phần máu (ngài đính chính 13:05) — máu tụt thì vạch chạy theo mép máu
-  shEl.style.width = (Math.max(0, Math.min(shFrac, 1-hpFrac))*100)+'%'; // cắt ở mép phải thanh, không tràn
-  hb.querySelector('.btx').textContent = Math.max(0,Math.ceil(p.hp))+' / '+p.maxHp + (p.shield>0? '  (+'+Math.ceil(p.shield)+' khiên)':'');
-  if(p.mpMax>0){
-    const mb=$('#mpbar');
-    mb.querySelector('.fill').style.width = (clamp(p.mp/p.mpMax,0,1)*100)+'%';
-    mb.querySelector('.btx').textContent = 'Năng lượng '+Math.floor(p.mp)+' / '+p.mpMax;
+  { // PERF-1127: ref cache + guard (vạch khiên vẫn DÍNH SÁT mép máu — ngài đính chính 13:05)
+    const _hpw=(hpFrac*100)+'%', _shL=(hpFrac*100)+'%', _shW=(Math.max(0, Math.min(shFrac, 1-hpFrac))*100)+'%', _hpTxt=Math.max(0,Math.ceil(p.hp))+' / '+p.maxHp + (p.shield>0? '  (+'+Math.ceil(p.shield)+' khiên)':'');
+    if(_hud.hpf.style.width!==_hpw) _hud.hpf.style.width=_hpw;
+    if(_hud.hps.style.left!==_shL) _hud.hps.style.left=_shL;
+    if(_hud.hps.style.width!==_shW) _hud.hps.style.width=_shW;
+    if(_hud.hpb.textContent!==_hpTxt) _hud.hpb.textContent=_hpTxt;
+  }
+  if(p.mpMax>0){ // PERF-1127: guard DOM write
+    const _mfw=(clamp(p.mp/p.mpMax,0,1)*100)+'%', _mft='Năng lượng '+Math.floor(p.mp)+' / '+p.mpMax;
+    if(_hud.mfill.style.width!==_mfw) _hud.mfill.style.width=_mfw;
+    if(_hud.mbtx.textContent!==_mft) _hud.mbtx.textContent=_mft;
   }
   // Nút chiêu
-  document.querySelectorAll('.skbtn').forEach(btn=>{
-    const slot=parseInt(btn.dataset.slot,10), sk=p.data.skills[slot];
-    const ov=btn.querySelector('.cdov');
-    const num=btn.querySelector('.cdnum'); if(num) num.style.display='none'; ov.style.height=''; btn.classList.remove('cooling'); // reset đầu vòng: ẩn số đếm, xóa chiều cao phủ tối, gỡ viền bạc — nhánh nhãn không dính trạng thái khung trước
+  B._hud.sk.forEach(_sk=>{ // PERF-1127: ref nút + ô CD cache từ B._hud (dựng 1 lần/trận)
+    const btn=_sk.b, slot=parseInt(btn.dataset.slot,10), sk=p.data.skills[slot];
+    const ov=_sk.ov;
+    const num=_sk.num; if(num) num.style.display='none'; ov.style.height=''; btn.classList.remove('cooling'); // reset đầu vòng: ẩn số đếm, xóa chiều cao phủ tối, gỡ viền bạc — nhánh nhãn không dính trạng thái khung trước
     const left = (p.cds[slot]||0) - now;
     // BADGE SỐ LƯỢT TÍCH TRỮ ×N (đợt sửa 2026-11-25, Lỗi 2 P1 + Lỗi 3): phần tử .chcnt riêng, góc dưới-phải nút — KHÔNG dùng .cdov (số đếm ngược giữ nguyên ở .cdnum), không che tâm icon; charges>0 → hiện ×N, charges==0 → ẩn (rơi xuống nhánh đếm hồi chung); đang gap → badge mờ đi, không hiện số đếm gap toàn nút
     const _chB = CHARGE_SKILLS[p.tankId+':'+slot];
-    const _ccB = btn.querySelector('.chcnt');
+    const _ccB = _sk.ch; // PERF-1127: cache (bỏ querySelector mỗi khung)
     if(_chB && _ccB){
       const _nB = (p[_chB.ch]||0);
       const _gapB = _chB.nx ? (p[_chB.nx]||0) : (_chB.gapAt ? (p[_chB.gapAt]||0)+(_chB.gap||0) : 0);
@@ -30686,7 +30707,7 @@ function updateHud(){
       ov.style.display='flex'; ov.style.background='transparent'; ov.style.fontSize='10px';
       ov.textContent = 'NỘI TẠI';
       // (dot sua 2026-11-25, Loi 3-stack: so tang ve badge .chcnt 13px goc duoi-phai nhu badge xN chung — lenh ngai 'so stack ro ra gon vao goc o chieu'; so tang giu nguyen; het tang thi badge an, chi con chu NOI TAI)
-      const _smQB = btn.querySelector('.chcnt');
+      const _smQB = _sk.ch; // PERF-1127
       if(_smQB){ const _smHas = (p.smStacks>0 && now<(p.smStackUntil||0)); _smQB.textContent = _smHas ? '×'+p.smStacks : ''; _smQB.style.display = _smHas ? 'flex' : 'none'; _smQB.classList.remove('gap'); }
       btn.classList.add('ready'); return;
     }
@@ -30724,7 +30745,7 @@ function updateHud(){
       ov.style.display='flex'; ov.style.background='transparent'; ov.style.fontSize='10px';
       ov.textContent = 'NỘI TẠI'; // Pegasus Q (nội tại THẬT, type 3, cd gốc 0): khiên chặn 3 lần — khiên nhàn rỗi vô hạn (vào trận/hạ địch/5s không giao tranh), khiên kỹ năng 5s (RAR-REDO 2026-11-22); ấn không có hiệu ứng gì (đã chặn bởi guard nội tại ở castSkill)
       // (dot sua 2026-11-25, Loi 3-stack: so khien ve badge .chcnt 13px goc duoi-phai nhu badge xN chung — theo mau Spider Q; so khien giu nguyen; het khien thi badge an, chi con chu NOI TAI)
-      const _pgQB = btn.querySelector('.chcnt');
+      const _pgQB = _sk.ch; // PERF-1127
       if(_pgQB){ const _pgHas = (p.pgShieldBlocks>0 && ((p.pgShieldKind||'idle')==='idle' || now<(p.pgShieldUntil||0))); _pgQB.textContent = _pgHas ? '×'+p.pgShieldBlocks : ''; _pgQB.style.display = _pgHas ? 'flex' : 'none'; _pgQB.classList.remove('gap'); }
       btn.classList.add('ready'); return;
     }
@@ -30793,7 +30814,8 @@ function updateHud(){
   drawMinimap();
 }
 function drawMinimap(){
-  const mc=$('#minimap'), mctx=mc.getContext('2d');
+  const mc=$('#minimap'); // PERF-1127: cache 2d-context (bỏ getContext mỗi khung)
+  const mctx=(B._mmctx && B._mmctx._mc===mc)? B._mmctx.ctx : (B._mmctx={_mc:mc, ctx:mc.getContext('2d')}).ctx;
   const W=mc.width, H=mc.height;
   mctx.clearRect(0,0,W,H);
   if(B.minimap) mctx.drawImage(B.minimap, 0, 0, W, H);
