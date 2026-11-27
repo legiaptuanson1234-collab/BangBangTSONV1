@@ -14,3 +14,6 @@ $RECYCLE.BIN/
 # File tạm / công cụ
 *.tmp
 *.log
+
+# Thư mục làm việc nội bộ của Agnes (không thuộc game)
+.agnes/

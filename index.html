@@ -700,6 +700,13 @@ const MODES = [
   { key:'phoban', name:'Phó Bản',          desc:'Đánh máy theo đợt: 3 đợt địch xông ra từ cổng · dọn sạch cả 3 đợt là thắng.', mapId:34, time:600, kind:'waves' },
   { key:'boss',   name:'Boss Thế Giới',    desc:'Cả đội 5 người hợp sức hạ 1 boss khổng lồ canh giữa map.', mapId:35, time:600, kind:'boss' },
   { key:'thu',    name:'Thử Tank',         desc:'Sân tập riêng: thử mọi chiêu của tank đang chọn với 1 bia địch.', mapId:4, time:0, kind:'practice' },
+  // ====== M72 PORT 2026-11-27: 4 chế độ M72 (chiếm nhiều cờ / dẫn bò / xe bom / lốc xoáy) ======
+  // Bản đồ + toạ độ mục tiêu LOCK 1:1 với M72 SQLite (đã xác minh cùng kích thước map với assets/m/<id>/map.json).
+  // Giữ nguyên tank + chỉ số của game này; chỉ thêm luật chơi + vật thể M72.
+  { key:'cocu',   name:'Ba Cờ Chiếm Điểm', desc:'Chiếm 3 cờ M72: giữ vòng cờ để tích điểm · đội chạm điểm trước thắng. Cờ giữa cần giữ lâu hơn và cho điểm nhiều hơn.', mapId:9,  time:600, winScore:300, kind:'m72flags' },
+  { key:'dando',  name:'Dẫn Bò Sữa',       desc:'Dẫn xe bò của mình tới chuồng (barn) địch: xe chỉ chạy khi có đồng đội đi kèm · chặn xe địch lại. Xe nào tới chuồng trước ghi điểm.', mapId:36, time:600, winPoints:25, kind:'m72cow' },
+  { key:'xebom',  name:'Đuổi Xe Bom',        desc:'Hai xe bom chạy trên đường ray: hộ tống xe mình tới đích (càng nhiều người đi kèm càng nhanh) · phá/đè xe địch. Xe nào về trước thắng.', mapId:70, time:900, winScore:1000, kind:'m72cart' },
+  { key:'locxoy', name:'Lốc Xoái',           desc:'Chiếm 3 cờ giữa bão lốc xoáy M72: lốc di chuyển theo đường cố định, hất tung + làm chậm ai trúng · tránh lốc khi chiếm cờ.', mapId:170, time:600, winScore:300, kind:'m72flags' },
 ];
 
 // ---------- Trạng thái sảnh ----------
@@ -23718,7 +23725,7 @@ async function startBattle(){
     ents:[], bullets:[], fxs:[], zones:[], fxSheets:{}, _hsRetried:new Set(), ghosts:[], kkLogs:[], golems:[], golemRipples:[], golemPending:[], minis:[], // minis: Mini P.E.K.K.A. thẻ [E] (25/11) — mảng riêng theo mẫu B.golems // _hsRetried: key sheet Hỏa Thần đã nạp lại 1 lần trong trận này (sửa v160 2026-11-22 — tối đa 1 lần nạp lại mỗi key mỗi trận) // ghosts: Hồn Ma của Bí Ngô Vương (10000052) — mảng riêng vì engine chưa có hệ thống triệu hồi/xây dựng; kkLogs: khúc gỗ Thế Thân của Kakashi (10000055) — mảng riêng theo mẫu B.ghosts
     score:{ blue:0, red:0 }, pointScore:{ blue:0, red:0 },
     silverP: 10000, firstBloodDone:false, camX:0, camY:0, zoom:1,
-    wave:0, roundWins:{ blue:0, red:0 }, bases:[], boss:null, shake:0, pendingAim:null, kvRipples:[], // pendingAim: lần ngắm đặt vùng kiểu LoL đang chờ (null = không ngắm); kvRipples: vòng sóng thả thẻ KV (r=120, 0,9s)
+    wave:0, roundWins:{ blue:0, red:0 }, bases:[], boss:null, m72:{}, m72Flags:[], m72Cows:[], m72Barns:[], m72Carts:[], m72Tornadoes:[], shake:0, pendingAim:null, kvRipples:[], // pendingAim: lần ngắm đặt vùng kiểu LoL đang chờ (null = không ngắm); kvRipples: vòng sóng thả thẻ KV (r=120, 0,9s) // M72: m72Flags/m72Cows/m72Barns/m72Carts/m72Tornadoes = vật thể chế độ M72 (chiếm cờ / dẫn bò / xe bom / lốc xoáy), m72 = cờ trạng thái dùng chung
   };
   const player = makeEnt(lobby.tankId, 1, true, 'Ngài');
   const _gateGen = B.gen; // HQ LOAD-FULL 25/11: the he cong vao — job cong chi duoc ghi vao B cua tran nay
@@ -23870,6 +23877,10 @@ ATH_SHEET_KEYS.forEach(p=> fxPaths.add(p)); // Athena: thân/nòng đã có sẵ
     B.zones.push({ kind:'capture', x: airPts[0][0], y: airPts[0][1], r:150, team:0, owner:null, until:Infinity, tickAt:0, tickEvery:1 });
   }
   if(mode.kind==='waves'){ spawnWave(); }
+  // ====== M72 SETUP: dựng vật thể chế độ M72 (cờ / bò / chuồng / xe bom / lốc) từ M72OBJ (toạ độ LOCK 1:1 M72 SQLite) ======
+  if(typeof m72Setup==='function') m72Setup(mode);
+  if(B.mode.kind==='m72cow'){ // dẫn bò: đồng đội địch (team 2) cần bò; giữ 5v5 (đã chọn sẵn), không spawn thêm
+  }
 
   // HUD
   $('#lobby').style.display='none';
@@ -27367,6 +27378,12 @@ function timeUp(){
     endBattle(2,'Hết giờ — chưa dọn sạch địch');
   } else if(k==='base'){
     endBattle(B.score.blue>=B.score.red?1:2,'Hết giờ — xét theo số mạng hạ');
+  } else if(k==='m72flags'){
+    endBattle(B.m72.score.blue>=B.m72.score.red?1:2,'Hết giờ — điểm cờ '+B.m72.score.blue+' : '+B.m72.score.red);
+  } else if(k==='m72cow'){
+    endBattle(B.m72.pts.blue>=B.m72.pts.red?1:2,'Hết giờ — điểm dẫn bò '+B.m72.pts.blue+' : '+B.m72.pts.red);
+  } else if(k==='m72cart'){
+    endBattle(2,'Hết giờ — xe bom chưa kịp về đích');
   } else {
     endBattle(B.score.blue>=B.score.red?1:2, 'Hết giờ — tỉ số '+B.score.blue+' : '+B.score.red);
   }
@@ -30582,8 +30599,12 @@ function updateHud(){
   const p=B.player, now=B.time;
   if(p.tankId==='10000055' && (p.kkCopyName||null)!==p._kkLastCopyName){ p._kkLastCopyName=p.kkCopyName||null; buildSkillButtons(p); } // Kakashi: tên E sao chép đổi -> dựng lại tên nút E (buildSkillButtons chỉ chạy lúc vào trận nên tên sao chép không tự hiện; chỉ chạy khi tên đổi, tank khác no-op)
   const point = B.mode.kind==='point';
-  $('#scoreblue').textContent = point? B.pointScore.blue : B.score.blue;
-  $('#scorered').textContent = point? B.pointScore.red : B.score.red;
+  let _m72bl = B.score.blue, _m72rd = B.score.red;
+  if(B.mode.kind==='m72flags'){ _m72bl=B.m72.score.blue; _m72rd=B.m72.score.red; }
+  else if(B.mode.kind==='m72cow'){ _m72bl=B.m72.pts.blue; _m72rd=B.m72.pts.red; }
+  else if(B.mode.kind==='m72cart'){ _m72bl=B.score.blue; _m72rd=B.score.red; } // xe bom: giữ tỉ mạng, xe về đích endBattle
+  $('#scoreblue').textContent = point? B.pointScore.blue : _m72bl;
+  $('#scorered').textContent = point? B.pointScore.red : _m72rd;
   const tsec = B.mode.time>0? Math.max(0, Math.ceil(B.left)) : Math.floor(B.time);
   $('#clock').textContent = Math.floor(tsec/60)+':'+String(tsec%60).padStart(2,'0');
   // Sinh lực
@@ -30811,6 +30832,162 @@ updateBattle = function(dt){
   _updateBattle0(dt);
   if(B.texts) { for(const t of B.texts) t.t += dt; B.texts = B.texts.filter(t=> t.t<1.3); }
 };
+
+// ============================================================================
+// M72 PORT 2026-11-27 — 4 chế độ M72 (chiếm nhiều cờ / dẫn bò / đuổi xe bom / lốc xoáy)
+// ----------------------------------------------------------------------------
+// Bản đồ + toạ độ M72OBJ LOCK 1:1 với M72 SQLite (đã xác minh cùng kích thước map
+// với assets/m/<id>/map.json — map 9/36/70/170). Giữ nguyên tank + chỉ số của game;
+// chỉ thêm luật chơi + vật thể M72. Toạ độ route đã rút gọn còn các điểm góc.
+// ============================================================================
+const M72OBJ = {"spawns":{},"9":{"flags":[{"x":708,"y":1644,"cap":2.0,"score":10},{"x":1932,"y":804,"cap":2.0,"score":10},{"x":732,"y":660,"cap":4.0,"score":15}]},"170":{"flags":[{"x":2316,"y":1380,"cap":2.0,"score":10},{"x":708,"y":612,"cap":2.0,"score":10},{"x":1500,"y":972,"cap":4.0,"score":15}],"tornadoes":[{"x":972,"y":588,"spawn":0.0,"route":[[972,588],[1500,588],[1500,1380],[2076,1380],[2076,612],[1524,612],[1524,1356],[972,1356],[972,588]]},{"x":2076,"y":1380,"spawn":60.0,"route":[[2076,1380],[1500,1380],[1500,588],[972,588],[972,1356],[1524,1356],[1524,612],[2076,612],[2076,1380]]},{"x":1932,"y":1236,"spawn":180.0,"route":[[1932,1236],[1116,1236],[1116,756],[1932,756],[1932,1236]]},{"x":1116,"y":756,"spawn":270.0,"route":[[1116,756],[1116,1236],[1932,1236],[1932,756],[1116,756]]}]},"36":{"cows":[{"camp":2,"x":1284,"y":1524,"route":[[1284,1524],[1284,324],[108,324]],"barn_camp":1},{"camp":1,"x":1404,"y":228,"route":[[1404,228],[1404,1452],[2628,1452]],"barn_camp":2}],"barns":[{"camp":2,"x":2628,"y":1452},{"camp":1,"x":108,"y":324}]},"70":{"carts":[{"camp":1,"x":396,"y":1620,"route":[[396,1620],[1764,1620],[1812,1620],[1812,1524],[1812,708],[828,708],[828,948]]},{"camp":2,"x":1836,"y":324,"route":[[1836,324],[468,324],[420,324],[420,420],[420,1236],[1404,1236],[1404,996]]}]}};
+
+// Dựng vật thể M72 theo chế độ + map (toạ độ lấy từ M72OBJ, đã lock với map tĩnh).
+function m72Setup(mode){
+  const M = M72OBJ[mode.mapId]; if(!M){ return; }
+  B.m72 = { score:{ blue:0, red:0 }, pts:{ blue:0, red:0 }, tick:0 };
+  B.m72Flags = (M.flags||[]).map(f=> ({ x:f.x, y:f.y, capMs:f.cap, score:f.score, camp:0, progress:0 }));
+  B.m72Cows = (M.cows||[]).map(c=> ({ camp:c.camp, barn_camp:c.barn_camp, x:c.x, y:c.y, route:c.route, seg:1, speed:0, alive:true, respawnAt:0 }));
+  B.m72Barns = (M.barns||[]).map(b=> ({ camp:b.camp, x:b.x, y:b.y }));
+  B.m72Carts = (M.carts||[]).map(c=> ({ camp:c.camp, x:c.x, y:c.y, route:c.route, seg:1, speed:0, alive:true, respawnAt:0 }));
+  B.m72Tornadoes = (M.tornadoes||[]).map(t=> ({ x:t.x, y:t.y, spawn:t.spawn, route:t.route, seg:1, active:false, tickAt:0 }));
+}
+// Vị trí nội suy dọc route (các điểm góc) của vật thể.
+function m72SegPos(route, seg, frac){ // frac 0..1 giữa route[seg-1]->route[seg]
+  const a=route[seg-1], b=route[seg]; return [ a[0]+(b[0]-a[0])*frac, a[1]+(b[1]-a[1])*frac ];
+}
+function m72CountCampAt(x,y,team,r){ let c=0; for(const e of B.ents){ if(!e.alive||e.team!==team) continue; if(dist2(e.x,e.y,x,y)<=r*r) c++; } return c; }
+function m72MoveSeg(obj, dt){ // di chuyển theo route; trả true nếu đã tới đích (seg hết)
+  const route=obj.route, a=route[obj.seg-1], b=route[obj.seg];
+  const len=Math.hypot(b[0]-a[0], b[1]-a[1])||1, step=obj.speed*dt;
+  let rem=len - Math.hypot(obj.x-a[0], obj.y-a[1]); // còn lại trên đoạn hiện tại
+  rem -= step;
+  while(rem<0){
+    if(obj.seg>=route.length){ obj.x=b[0]; obj.y=b[1]; return true; }
+    obj.seg++;
+    const na=route[obj.seg-1], nb=route[obj.seg], nl=Math.hypot(nb[0]-na[0], nb[1]-na[1])||1;
+    obj.x=na[0]; obj.y=na[1]; rem += nl;
+    if(obj.seg>=route.length){ obj.x=nb[0]; obj.y=nb[1]; return true; }
+  }
+  const frac=Math.min(1, Math.max(0, (Math.hypot(obj.x-a[0],obj.y-a[1]))/len));
+  const p=m72SegPos(route,obj.seg,frac); obj.x=p[0]; obj.y=p[1];
+  return false;
+}
+// Tick logic M72 (cờ / bò / xe bom / lốc). Chạy sau updateBattle mỗi khung.
+function m72Tick(dt){
+  if(!B || B.over || !B.ents || !B.m72Flags || !B.m72Flags.length && !B.m72Cows && !B.m72Carts) return;
+  const now=B.time, kind=B.mode.kind;
+  // --- Chiếm cờ (m72flags: map 9 / lốc xoái map 170) ---
+  if(B.m72Flags && B.m72Flags.length && (kind==='m72flags')){
+    const WIN = B.mode.winScore||1000;
+    for(const f of B.m72Flags){
+      const c1=m72CountCampAt(f.x,f.y,1,60), c2=m72CountCampAt(f.x,f.y,2,60);
+      const lead = c1>c2?1:(c2>c1?2:0);
+      if(lead===0 || f.camp!==lead){ f.camp=lead; f.progress=0; continue; }
+      f.progress+=dt;
+      if(f.progress>=f.capMs){
+        f.progress=0;
+        // M72 occupy_rules: cờ cho điểm score, bonus x2 khi đội giữ đồng thời cả 3 cờ
+        const allOwned = B.m72Flags.length===3 && B.m72Flags.every(g=>g.camp===f.camp);
+        const key = f.camp===1?'blue':'red';
+        B.m72.score[key] = Math.min(WIN, B.m72.score[key] + f.score*(allOwned?2:1));
+      }
+    }
+    if(B.m72.score.blue>=WIN) endBattle(1,'Chạm '+WIN+' điểm cờ');
+    else if(B.m72.score.red>=WIN) endBattle(2,'Địch chạm '+WIN+' điểm cờ');
+  }
+  // --- Dẫn bò (m72cow) ---
+  if(B.m72Cows && B.m72Cows.length){
+    const WIN = B.mode.winPoints||25;
+    for(const c of B.m72Cows){
+      if(!c.alive){ if(now>=c.respawnAt){ c.alive=true; c.x=c.route[0][0]; c.y=c.route[0][1]; c.seg=1; c.speed=0; } continue; }
+      const herd=c.barn_camp; // bên cần dắt bò này tới chuồng
+      const friends=m72CountCampAt(c.x,c.y,herd,240);
+      if(friends>0){ c.speed=Math.min(160, 100+12*(friends-1)); if(m72MoveSeg(c,dt)){ // tới chuồng -> ghi điểm
+          B.m72.pts[herd===1?'blue':'red']++; c.alive=false; c.respawnAt=now+3;
+          if(B.m72.pts[herd===1?'blue':'red']>=WIN){ endBattle(herd===1?1:2, (herd===1?'Xe bò xanh':'Xe bò đỏ')+' tới chuồng đủ '+WIN+' điểm'); }
+        } } else c.speed=0;
+    }
+  }
+  // --- Xe bom (m72cart) ---
+  if(B.m72Carts && B.m72Carts.length){
+    for(const c of B.m72Carts){
+      if(!c.alive){ if(now>=c.respawnAt){ c.alive=true; c.x=c.route[0][0]; c.y=c.route[0][1]; c.seg=1; c.speed=0; } continue; }
+      const friends=m72CountCampAt(c.x,c.y,c.camp,200), opp=m72CountCampAt(c.x,c.y,3-c.camp,200);
+      const spd=[0,50,60,70,75,80][Math.min(5,friends)];
+      c.speed=(friends>opp)? spd:0;
+      if(c.speed>0 && m72MoveSeg(c,dt)){ endBattle(c.camp,'Xe bom của đội '+(c.camp===1?'xanh':'đỏ')+' về đích trước'); }
+    }
+  }
+  // --- Lốc xoái (m72flags có tornado) ---
+  if(B.m72Tornadoes && B.m72Tornadoes.length){
+    for(const t of B.m72Tornadoes){
+      if(!t.active){ if(now>=t.spawn){ t.active=true; t.x=t.route[0][0]; t.y=t.route[0][1]; t.seg=1; announce('LỐC XOÁY', 'Lốc mới xuất hiện — tránh xa!'); } else continue; }
+      // lốc chạy theo route, lặp vòng
+      let sp=m72MoveSeg(t,dt); if(sp){ t.seg=1; }
+      t.tickAt+=dt;
+      if(t.tickAt>=0.2){ t.tickAt=0; for(const e of B.ents){ if(!e.alive) continue; if(dist2(e.x,e.y,t.x,t.y)<=120*120){ e.stunUntil=Math.max(e.stunUntil||0,now+1.5); e.slowUntil=Math.max(e.slowUntil||0,now+3); e.slowF=0.5; } } }
+    }
+  }
+}
+// Vẽ vật thể M72 (gọi sau renderBattle).
+function m72Render(){
+  if(!B || B.over || !ctx) return; const now=B.time;
+  for(const b of (B.m72Barns||[])){ ctx.beginPath(); ctx.arc(b.x,b.y,40,0,Math.PI*2); ctx.fillStyle=b.camp===1?'#1663a8':'#b03327'; ctx.fill(); ctx.lineWidth=5; ctx.strokeStyle=b.camp===1?'#38a8ff':'#ff5347'; ctx.stroke(); ctx.fillStyle='#fff'; ctx.font='700 14px "Be Vietnam Pro"'; ctx.textAlign='center'; ctx.fillText('CHUỒNG', b.x, b.y+4); }
+  for(const c of (B.m72Cows||[])){ if(!c.alive) continue; ctx.beginPath(); ctx.arc(c.x,c.y,26,0,Math.PI*2); ctx.fillStyle=c.barn_camp===1?'rgba(56,168,255,.9)':'rgba(255,83,71,.9)'; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.stroke(); ctx.fillStyle='#fff'; ctx.font='700 12px "Be Vietnam Pro"'; ctx.textAlign='center'; ctx.fillText('BÒ', c.x, c.y+4); }
+  for(const c of (B.m72Carts||[])){ if(!c.alive) continue; ctx.fillStyle=c.camp===1?'rgba(56,168,255,.95)':'rgba(255,83,71,.95)'; ctx.fillRect(c.x-18,c.y-14,36,28); ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.strokeRect(c.x-18,c.y-14,36,28); ctx.fillStyle='#fff'; ctx.font='700 11px "Be Vietnam Pro"'; ctx.textAlign='center'; ctx.fillText('XE BOM', c.x, c.y+30); }
+  for(const f of (B.m72Flags||[])){ const col=f.camp===1?'#38a8ff':f.camp===2?'#ff5347':'#ffd34d'; ctx.beginPath(); ctx.arc(f.x,f.y,54,0,Math.PI*2); ctx.fillStyle=f.camp===1?'rgba(56,168,255,.12)':f.camp===2?'rgba(255,83,71,.12)':'rgba(255,211,77,.12)'; ctx.fill(); ctx.lineWidth=4; ctx.strokeStyle=col; ctx.stroke(); if(f.camp){ const fr=f.progress/f.capMs; ctx.beginPath(); ctx.arc(f.x,f.y,54,-Math.PI/2,-Math.PI/2+fr*Math.PI*2); ctx.lineWidth=6; ctx.strokeStyle=col; ctx.stroke(); } ctx.fillStyle='#fff'; ctx.font='700 14px "Be Vietnam Pro"'; ctx.textAlign='center'; ctx.fillText(f.camp===1?'XANH':f.camp===2?'ĐỎ':'TRUNG LẬP', f.x, f.y+4); }
+  for(const t of (B.m72Tornadoes||[])){ if(!t.active) continue; ctx.save(); ctx.translate(t.x,t.y); ctx.rotate(now*4); ctx.strokeStyle='rgba(180,230,255,.85)'; ctx.lineWidth=4; for(let i=0;i<4;i++){ ctx.rotate(Math.PI/2); ctx.beginPath(); ctx.arc(0,0,60,i*0.2,i*0.2+1.6); ctx.stroke(); } ctx.restore(); }
+}
+// Minimap: chấm vật thể M72.
+function m72Minimap(){
+  if(!B || !$('#minimap')) return; const mc=$('#minimap'), mctx=mc.getContext('2d'); const W=mc.width,H=mc.height, sx=W/B.mapW, sy=H/B.mapH;
+  for(const b of (B.m72Barns||[])){ mctx.fillStyle=b.camp===1?'#38a8ff':'#ff5347'; mctx.fillRect(b.x*sx-4,b.y*sy-4,8,8); }
+  for(const c of (B.m72Cows||[])){ if(!c.alive)continue; mctx.fillStyle=c.barn_camp===1?'#38a8ff':'#ff5347'; mctx.beginPath(); mctx.arc(c.x*sx,c.y*sy,3,0,Math.PI*2); mctx.fill(); }
+  for(const c of (B.m72Carts||[])){ if(!c.alive)continue; mctx.fillStyle=c.camp===1?'#38a8ff':'#ff5347'; mctx.fillRect(c.x*sx-3,c.y*sy-3,6,6); }
+  for(const f of (B.m72Flags||[])){ mctx.beginPath(); mctx.arc(f.x*sx,f.y*sy,5,0,Math.PI*2); mctx.strokeStyle=f.camp===1?'#38a8ff':f.camp===2?'#ff5347':'#ffd34d'; mctx.lineWidth=2; mctx.stroke(); }
+  for(const t of (B.m72Tornadoes||[])){ if(!t.active)continue; mctx.beginPath(); mctx.arc(t.x*sx,t.y*sy,4,0,Math.PI*2); mctx.fillStyle='rgba(180,230,255,.9)'; mctx.fill(); }
+}
+// Mục tiêu bot M72 (giữ cờ / dắt bò / đuổi xe / né lốc) — đè hướng di chuyển của bot.
+function m72BotGoal(e){
+  if(!B || B.over || e.isPlayer || !B.m72Flags && !(B.m72Cows||[]).length) return;
+  const now=B.time, kind=B.mode.kind; let gx=null, gy=null;
+  if(kind==='m72flags' && B.m72Flags.length){
+    let best=null, bd=1e18;
+    for(const f of B.m72Flags){
+      const c1=m72CountCampAt(f.x,f.y,e.team,60);
+      let w = f.camp===e.team? (c1>=2? 1500: 0) : (f.camp===0? 300: 700);
+      const d=Math.hypot(f.x-e.x,f.y-e.y)+w;
+      if(d<bd){ bd=d; best=f; }
+    }
+    gx=best.x; gy=best.y;
+    if(Math.hypot(gx-e.x,gy-e.y)<54){ const a=Math.atan2(e.y-gy,e.x-gx); e.vx=Math.cos(a+0.9); e.vy=Math.sin(a+0.9); e.aim=a+0.9; }
+    else { const a=Math.atan2(gy-e.y,gx-e.x); e.vx=Math.cos(a); e.vy=Math.sin(a); e.aim=a; }
+    // né lốc: nếu lốc quá gần thì trượt sang một bên
+    for(const t of (B.m72Tornadoes||[])){ if(t.active && Math.hypot(t.x-e.x,t.y-e.y)<150){ const pa=Math.atan2(e.y-t.y,e.x-t.x); e.vx=Math.cos(pa); e.vy=Math.sin(pa); e.aim=pa; break; } }
+    return;
+  }
+  if((kind==='m72cow' || kind==='m72cart')){
+    const objs = kind==='m72cow'? B.m72Cows : B.m72Carts;
+    if(!objs||!objs.length) return;
+    const own = objs.find(o=> kind==='m72cow'? o.barn_camp===e.team : o.camp===e.team);
+    const enm = objs.find(o=> kind==='m72cow'? o.barn_camp!==e.team : o.camp!==e.team);
+    if(enm && enm.alive && m72CountCampAt(enm.x,enm.y,e.team,240)<1){ // chặn xe địch (ít người nhà bên đó)
+      gx=enm.x; gy=enm.y;
+    } else if(own && own.alive){ // dắt xe nhà mình
+      const ahead=m72SegPos(own.route, Math.min(own.seg,own.route.length-1), 0); // điểm góc kế tiếp
+      gx=(ahead? ahead[0]:own.x); gy=(ahead? ahead[1]:own.y);
+    }
+    if(gx!=null){ const a=Math.atan2(gy-e.y,gx-e.x); e.vx=Math.cos(a); e.vy=Math.sin(a); e.aim=a; }
+  }
+}
+// Wrap các hook engine để luồn M72 vào mà không đụng code gốc.
+{
+  const _uB_m72 = updateBattle; updateBattle = function(dt){ _uB_m72(dt); m72Tick(dt); };
+  const _rB_m72 = renderBattle; renderBattle = function(){ _rB_m72(); m72Render(); };
+  const _bc_m72 = botControl;  botControl  = function(e,dt){ _bc_m72(e,dt); m72BotGoal(e); };
+  const _mm_m72 = drawMinimap; drawMinimap = function(){ _mm_m72(); m72Minimap(); };
+}
 
 boot();
 </script>
